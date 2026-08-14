@@ -27,6 +27,16 @@ String buildPage()
 
     page += "<form method='POST' action='/save'>";
 
+    page += "<h3>Admin Settings</h3>";
+
+    page += "Admin Username:</br>";
+    page += "<input type='text' name='admin_username' size='32' value='" + webUser + "'></br>";
+
+    page += "Admin Password:</br>";
+    page += "<input type='text' name='admin_password' size='32' value='" + webPassword + "'></br>";
+
+    page += "</br></br>";
+
     page += "<h3>API Key</h3>";
     page += "<input name='apikey' size='64' value='" + apiKey + "'>";
 
@@ -108,8 +118,21 @@ void setupWeb()
         return request->requestAuthentication();
         }
 
-        apiKey = request->arg("apikey");
+        if(!request->arg("apikey").length() == 0)
+        {
+             apiKey = request->arg("apikey");
+        }
 
+        if(!request->arg("admin_username").length() == 0)
+        {
+             webUser = request->arg("admin_username");
+        }
+
+        if(!request->arg("admin_password").length() == 0)
+        {
+             webPassword = request->arg("admin_password");
+        }
+       
         for(int i=0;i<DEVICE_COUNT;i++)
         {
             devices[i].name =
@@ -224,9 +247,7 @@ void setupWeb()
                       return;
                   }
 
-                  int idx =
-                      findDevice(
-                          request->getParam("id")->value());
+                  int idx = findDevice(request->getParam("id")->value());
 
                   if (idx < 0)
                   {

@@ -2,10 +2,10 @@
 
 Device devices[DEVICE_COUNT];
 
-String apiKey = "ChangeMe123456789012345678901234";
+String apiKey = "";
 
-String webUser = "admin";
-String webPassword = "admin";
+String webUser = "";
+String webPassword = "";
 
 String wifiSsid = "";
 String wifiPassword = "";

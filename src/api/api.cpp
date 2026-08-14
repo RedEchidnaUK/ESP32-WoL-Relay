@@ -29,9 +29,29 @@ int findDevice(String value)
 
     for(int i=0;i<DEVICE_COUNT;i++)
     {
-        if(devices[i].name.equalsIgnoreCase(value))
+        if(devices[i].name.equalsIgnoreCase(value) && devices[i].enabled)
             return i;
     }
 
     return -1;
+}
+
+String generateApiKey()
+{
+    const char charset[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789"
+        "~_-";
+
+    String key;
+
+    for (int i = 0; i < 32; i++)
+    {
+        uint32_t r = esp_random();
+
+        key += charset[r % (sizeof(charset) - 1)];
+    }
+
+    return key;
 }

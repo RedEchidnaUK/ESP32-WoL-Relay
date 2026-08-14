@@ -1,5 +1,4 @@
 #include "storage.h"
-#include "../config/config.h"
 
 unsigned long buttonPressStart = 0;
 bool buttonPressed = false;
@@ -9,6 +8,8 @@ void saveConfig()
     prefs.begin("wolrelay", false);
 
     prefs.putString("apikey", apiKey);
+    prefs.putString("web_user", webUser);
+    prefs.putString("web_password", webPassword);
 
     for (int i = 0; i < DEVICE_COUNT; i++)
     {
@@ -26,9 +27,11 @@ void saveConfig()
 
 void loadConfig()
 {
+    
     prefs.begin("wolrelay", true);
 
-    apiKey = prefs.getString("apikey", "ChangeMe123456789012345678901234");
+    apiKey = prefs.getString("apikey", "");
+    outputDebugLine("APIKey: " + apiKey);
 
     for (int i = 0; i < DEVICE_COUNT; i++)
     {
@@ -51,7 +54,14 @@ void loadConfig()
     }
 
     wifiSsid = prefs.getString("wifi_ssid", "");
+    outputDebugLine("SSID: " + wifiSsid);
     wifiPassword = prefs.getString("wifi_password", "");
+    outputDebugLine("WIFI Password: " + wifiPassword);
+
+    webUser = prefs.getString("web_user");
+    outputDebugLine("Admin user: " + webUser);
+    webPassword = prefs.getString("web_password");
+    outputDebugLine("Admin Password: " + webPassword);
 
     prefs.end();
 }
@@ -68,7 +78,7 @@ void checkResetButton()
 
         if (millis() - buttonPressStart > RESET_HOLD_TIME)
         {
-            Serial.println("Factory reset");
+            outputDebugLine("Factory reset");
 
             prefs.begin("wolrelay", false);
             prefs.clear();
@@ -81,8 +91,8 @@ void checkResetButton()
                 delay(500);
                 digitalWrite(LED, LOW);
             }
-            // delay(1000);
 
+            outputDebugLine("Restarting...");
             ESP.restart();
         }
     }

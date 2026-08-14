@@ -9,6 +9,16 @@
 #define LED 2
 #define DEVICE_COUNT 10
 
+#define DEBUG 1
+
+#if DEBUG==1
+#define outputDebug(x); Serial.print(x);
+#define outputDebugLine(x); Serial.println(x);
+#else
+#define outputDebug(x); 
+#define outputDebugLine(x); 
+#endif
+
 struct Device
 {
     bool enabled;

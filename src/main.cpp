@@ -5,7 +5,6 @@
 #include "./api/api.h"
 #include "./webpage/webpage.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // SETUP
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,16 +19,24 @@ void setup()
 
     loadConfig();
 
-    if(wifiSsid.length() == 0)
+    if (wifiSsid.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
     {
         startSetupPortal();
     }
     else
     {
-        connectWifi();
+        if (connectWifi() == WL_CONNECTED)
+        {
+            outputDebugLine("Connected to WiFi");
+            outputDebugLine(WiFi.localIP());
+            setupWeb();
+        }
+        else
+        {
+            outputDebugLine("Failed to connect to WiFi");
+            startSetupPortal();
+        }
     }
-
-    setupWeb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

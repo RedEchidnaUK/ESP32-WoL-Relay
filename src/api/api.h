@@ -3,3 +3,4 @@
 
 bool checkApiKey(AsyncWebServerRequest *request);
 int findDevice(String value);
+String generateApiKey();
