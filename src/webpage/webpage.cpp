@@ -8,95 +8,6 @@ bool authenticateWeb(AsyncWebServerRequest *request)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// WEB PAGE
-////////////////////////////////////////////////////////////////////////////////
-
-String buildPage()
-{
-    String page;
-
-    page += "<html><head>";
-    page += "<meta name='viewport' content='width=device-width'>";
-    page += "<style>";
-    page += "body{font-family:Arial;margin:20px}";
-    page += "table{border-collapse:collapse;width:100%}";
-    page += "td,th{border:1px solid #ccc;padding:5px}";
-    page += "</style></head><body>";
-
-    page += "<h2>ESP32 WoL Relay</h2>";
-
-    page += "<form method='POST' action='/save'>";
-
-    page += "<h3>Admin Settings</h3>";
-
-    page += "Admin Username:</br>";
-    page += "<input type='text' name='admin_username' size='32' value='" + webUser + "'></br>";
-
-    page += "Admin Password:</br>";
-    page += "<input type='text' name='admin_password' size='32' value='" + webPassword + "'></br>";
-
-    page += "</br></br>";
-
-    page += "<h3>API Key</h3>";
-    page += "<input name='apikey' size='64' value='" + apiKey + "'>";
-
-    page += "<br><br>";
-
-    page += "<table>";
-    page += "<tr>";
-    page += "<th>ID</th>";
-    page += "<th>Name</th>";
-    page += "<th>MAC</th>";
-    page += "<th>IP</th>";
-    page += "<th>Broadcast</th>";
-    page += "<th>Enabled</th>";
-    page += "</tr>";
-
-    for (int i = 0; i < DEVICE_COUNT; i++)
-    {
-        page += "<tr>";
-
-        page += "<td>";
-        page += String(i + 1);
-        page += "</td>";
-
-        page += "<td><input name='name";
-        page += String(i);
-        page += "' value='" + devices[i].name + "'></td>";
-
-        page += "<td><input name='mac";
-        page += String(i);
-        page += "' value='" + devices[i].mac + "'></td>";
-
-        page += "<td><input name='ip";
-        page += String(i);
-        page += "' value='" + devices[i].ip + "'></td>";
-
-        page += "<td><input name='bc";
-        page += String(i);
-        page += "' value='" + devices[i].broadcast + "'></td>";
-
-        page += "<td><input type='checkbox' name='en";
-        page += String(i);
-
-        if (devices[i].enabled)
-            page += "' checked>";
-        else
-            page += "'>";
-
-        page += "</td>";
-
-        page += "</tr>";
-    }
-
-    page += "</table><br>";
-    page += "<input type='submit' value='Save'>";
-    page += "</form></body></html>";
-
-    return page;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // WEB SERVER
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,8 +19,23 @@ void setupWeb()
         {
         return request->requestAuthentication();
         }
+        request->send(LittleFS, "/index.html", String()); });
 
-        request->send(200, "text/html", buildPage()); });
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+              { 
+                if (!authenticateWeb(request))
+                {
+                return request->requestAuthentication();
+                }    
+                request->send(LittleFS, "/style.css", "text/css"); });
+
+    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
+              { 
+                if (!authenticateWeb(request))
+                {
+                return request->requestAuthentication();
+                }
+                request->send(LittleFS, "/script.js", "application/javascript"); });
 
     server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
               {
@@ -219,8 +145,7 @@ void setupWeb()
 
                       o["id"] = i + 1;
                       o["name"] = devices[i].name;
-                      o["online"] =
-                          pingHost(devices[i].ip);
+                      o["online"] = pingHost(devices[i].ip);
                   }
 
                   String json;
@@ -228,6 +153,55 @@ void setupWeb()
 
                   request->send(200, "application/json", json);
               });
+
+    // GET CONFIG
+
+    server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+
+                if (!authenticateWeb(request))
+                {
+                return request->requestAuthentication();
+                }
+
+                JsonDocument doc;
+
+                doc["webuser"] = webUser;
+
+                JsonArray deviceArray = doc["devices"].to<JsonArray>();
+
+                for (int i = 0; i < DEVICE_COUNT; i++)
+                {
+                    JsonObject device = deviceArray.add<JsonObject>();
+
+                    device["id"] = i + 1;
+                    device["name"] = devices[i].name;
+                    device["mac"] = devices[i].mac;
+                    device["ip"] = devices[i].ip;
+                    device["broadcast"] = devices[i].broadcast;
+                    device["enabled"] = devices[i].enabled;
+                }
+
+                String json;
+                ArduinoJson::serializeJson(doc, json);
+
+                request->send(200, "application/json", json); });
+
+    server.on("/api/apikey", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+                if (!authenticateWeb(request))
+                {
+                return request->requestAuthentication();
+                }
+
+                JsonDocument doc;
+
+                doc["apikey"] = generateApiKey();
+
+                String json;
+                ArduinoJson::serializeJson(doc, json);
+
+                request->send(200, "application/json", json); });
 
     // POST WAKE
 

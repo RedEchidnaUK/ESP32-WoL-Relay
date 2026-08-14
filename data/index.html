@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 Wake on Lan Relay</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h2>ESP32 WoL Relay</h2>
+    <form method="POST" action="/save">
+        <h3>Admin Settings</h3>
+        <label for="admin_username">Admin Username:</label>
+        <input type="text" id="admin_username" name="admin_username" size="32">
+        </br>
+        </br>
+        <label for="admin_password">Admin Password:</label>
+        <input type="password" id="admin_password" name="admin_password" size="32">
+        </br>
+        </br>
+        <h3>API Settings</h3>
+        <label for="apikey">API Key:</label>
+        <input type="text" id="apikey" name="apikey" size="40"><button type="button" onclick="generateAPIKey()">Generate</button>
+        </br>
+        </br>
+        <h3>Device Settings</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>MAC</th>
+                    <th>IP</th>
+                    <th>Broadcast</th>
+                    <th>Enabled</th>
+                </tr>
+            </thead>
+            <tbody id="deviceTable">
+            </tbody>
+        </table>
+        </br>
+        <input type="submit" value="Save">
+    </form>
+    <script src="script.js"></script>
+    <noscript>Sorry, your browser does not support JavaScript!</noscript>
+</body>
+</html>

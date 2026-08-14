@@ -17,6 +17,12 @@ void setup()
     pinMode(RESET_PIN, INPUT_PULLUP);
     pinMode(LED, OUTPUT);
 
+    if (!LittleFS.begin())
+    {
+        Serial.println("An Error has occurred while mounting LittleFS");
+        return;
+    }
+
     loadConfig();
 
     if (wifiSsid.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
