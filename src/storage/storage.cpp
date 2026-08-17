@@ -84,7 +84,7 @@ void checkResetButton()
             prefs.clear();
             prefs.end();
 
-            for (size_t i = 0; i < 6; i++)
+            for (size_t i = 0; i < 5; i++)
             {
                 delay(500);
                 digitalWrite(LED, HIGH);
