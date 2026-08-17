@@ -7,7 +7,7 @@ String apiKey = "";
 String webUser = "";
 String webPassword = "";
 
-String wifiSsid = "";
+String wifiSSID = "";
 String wifiPassword = "";
 
 Preferences prefs;

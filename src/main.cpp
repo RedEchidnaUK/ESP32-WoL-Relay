@@ -23,14 +23,25 @@ void setup()
         return;
     }
 
-    loadConfig();
+    outputDebugLine("Checking for preferences");
+    prefs.begin("wolrelay", false);
+    bool apiKeyExists = prefs.isKey("apiKey");
+    prefs.end();
 
-    if (wifiSsid.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
-    {
+    if(!apiKeyExists)
+    {  
+        outputDebugLine("Preferences is empty");
+        
+        apiKey = generateApiKey();
+        outputDebugLine("Generated new API key: " + apiKey);
+
+        outputDebugLine("Starting setup portal");
         startSetupPortal();
     }
     else
     {
+        outputDebugLine("Preferences found, loading config");
+        loadConfig();
         if (connectWifi() == WL_CONNECTED)
         {
             outputDebugLine("Connected to WiFi");

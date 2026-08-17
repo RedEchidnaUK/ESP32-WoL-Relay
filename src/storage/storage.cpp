@@ -7,10 +7,14 @@ void saveConfig()
 {
     prefs.begin("wolrelay", false);
 
-    prefs.putString("apikey", apiKey);
-    prefs.putString("web_user", webUser);
-    prefs.putString("web_password", webPassword);
+    outputDebugLine("Saving apiKey");
+    prefs.putString("apiKey", apiKey);
+    outputDebugLine("Saving webUser");
+    prefs.putString("webUser", webUser);
+    outputDebugLine("Saving webPassword");
+    prefs.putString("webPassword", webPassword);
 
+    outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)
     {
         String p = "d" + String(i);
@@ -23,6 +27,7 @@ void saveConfig()
     }
 
     prefs.end();
+    outputDebugLine("Save complete")
 }
 
 void loadConfig()
@@ -30,7 +35,7 @@ void loadConfig()
     
     prefs.begin("wolrelay", true);
 
-    apiKey = prefs.getString("apikey", "");
+    apiKey = prefs.getString("apiKey", "");
     outputDebugLine("APIKey: " + apiKey);
 
     for (int i = 0; i < DEVICE_COUNT; i++)
@@ -53,14 +58,14 @@ void loadConfig()
             prefs.getString((p + "b").c_str(), "");
     }
 
-    wifiSsid = prefs.getString("wifi_ssid", "");
-    outputDebugLine("SSID: " + wifiSsid);
-    wifiPassword = prefs.getString("wifi_password", "");
+    wifiSSID = prefs.getString("wifiSSID", "");
+    outputDebugLine("SSID: " + wifiSSID);
+    wifiPassword = prefs.getString("wifiPassword", "");
     outputDebugLine("WIFI Password: " + wifiPassword);
 
-    webUser = prefs.getString("web_user");
+    webUser = prefs.getString("webUser");
     outputDebugLine("Admin user: " + webUser);
-    webPassword = prefs.getString("web_password");
+    webPassword = prefs.getString("webPassword");
     outputDebugLine("Admin Password: " + webPassword);
 
     prefs.end();

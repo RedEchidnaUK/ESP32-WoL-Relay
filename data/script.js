@@ -6,7 +6,7 @@ async function loadConfig()
         const config = await response.json();
 
         buildDeviceTable(config.devices);
-        document.getElementById("admin_username").value = config.webuser || "";
+        document.getElementById("webUser").value = config.webuser || "";
     }
     catch (error)
     {
@@ -74,7 +74,7 @@ async function generateAPIKey()
         const response = await fetch("/api/apikey");
         const newAPIKey = await response.json();
 
-        document.getElementById("apikey").value = newAPIKey.apikey || "";
+        document.getElementById("apiKey").value = newAPIKey.apiKey || "";
     }
     catch (error)
     {

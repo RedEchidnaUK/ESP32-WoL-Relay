@@ -3,32 +3,21 @@
 wl_status_t connectWifi()
 {
     prefs.begin("wolrelay", false);
-    prefs.getString("wifi_ssid", wifiSsid);
-    prefs.getString("wifi_password", wifiPassword);
+    prefs.getString("wifiSSID", wifiSSID);
+    prefs.getString("wifiPassword", wifiPassword);
     prefs.end();
 
     WiFi.mode(WIFI_STA);
 
-    WiFi.begin(wifiSsid, wifiPassword);
+    WiFi.begin(wifiSSID, wifiPassword);
 
     outputDebugLine("Connecting");
 
-    // while (WiFi.status() != WL_CONNECTED)
-    // {
-    //     delay(500);
-    //     Serial.print(".");
-    // }
-
-    // wl_status_t status = static_cast<wl_status_t>(WiFi.waitForConnectResult());
     return static_cast<wl_status_t>(WiFi.waitForConnectResult());
 }
 
 void startSetupPortal()
 {
-    apiKey = generateApiKey();
-
-    outputDebugLine("Generated new API key: " + apiKey);
-
     WiFi.mode(WIFI_AP);
     WiFi.softAP("ESP32 WoL Relay");
 
@@ -59,15 +48,15 @@ void startSetupPortal()
         page += "<h3>Admin Settings</h3>";
 
         page += "Admin Username:</br>";
-        page += "<input type='text' name='admin_username' size='32' value='admin'></br>";
+        page += "<input type='text' name='webUser' size='32' value='admin'></br>";
 
         page += "Admin Password:</br>";
-        page += "<input type='text' name='admin_password' size='32' value='" + WiFi.macAddress() + "'></br>";
+        page += "<input type='text' name='webPassword' size='32' value='" + WiFi.macAddress() + "'></br>";
 
         page += "</br></br>";
 
         page += "<h3>API Key</h3>";
-        page += "<input type='text' name='apikey' size='64' value='" + apiKey + "'></br>";
+        page += "<input type='text' name='apiKey' size='64' value='" + apiKey + "'></br>";
         page += "Please record or change this. You will not see it displayed again, but you can reset it later.";
 
         page += "</br></br>";
@@ -79,21 +68,21 @@ void startSetupPortal()
 
     server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
               {
-        wifiSsid = request->arg("ssid");
+        wifiSSID = request->arg("ssid");
         wifiPassword = request->arg("password");
-        webUser = request->arg("admin_username");
-        webPassword = request->arg("admin_password");
-        apiKey = request->arg("apikey");
+        webUser = request->arg("webUser");
+        webPassword = request->arg("webPassword");
+        apiKey = request->arg("apiKey");
 
-        outputDebugLine(wifiSsid);
+        outputDebugLine(wifiSSID);
         outputDebugLine(wifiPassword);
         outputDebugLine(webUser);
         outputDebugLine(webPassword);
         outputDebugLine(apiKey);
 
-        if(wifiSsid.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
+        if(wifiSSID.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
         {
-            if (wifiSsid.length() == 0 || wifiPassword.length() == 0)
+            if (wifiSSID.length() == 0 || wifiPassword.length() == 0)
             {
                 outputDebugLine("Missing SSID or password");
             }
@@ -109,16 +98,16 @@ void startSetupPortal()
             return;
         }
 
+        outputDebugLine("Saving config");
         prefs.begin("wolrelay", false);
-        prefs.putString("wifi_ssid", wifiSsid);
-        prefs.putString("wifi_password", wifiPassword);
-        prefs.putString("web_user", webUser);
-        prefs.putString("web_password", webPassword);
+        prefs.putString("wifiSSID", wifiSSID);
+        prefs.putString("wifiPassword", wifiPassword);
 
         prefs.end();
 
         saveConfig();
 
+        outputDebugLine("Sending reboot message");
         request->send(200, "text/html", "<html><body><h2>Settings Saved. Rebooting...</h2></body></html>");
 
         delay(3000);
@@ -135,12 +124,12 @@ bool pingHost(String ip)
 
     if (Ping.ping(remote_ip.fromString(ip)))
     {
-        outputDebugLine("Success!!");
+        outputDebugLine("Ping Success!!");
         return true;
     }
     else
     {
-        outputDebugLine("Error :(");
+        outputDebugLine("Ping Failed :(");
         return false;
     }
 }

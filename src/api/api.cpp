@@ -7,9 +7,9 @@ bool checkApiKey(AsyncWebServerRequest *request)
         return request->getHeader("X-API-Key")->value() == apiKey;
     }
 
-    if(request->hasParam("apikey"))
+    if(request->hasParam("apiKey"))
     {
-        return request->getParam("apikey")->value() == apiKey;
+        return request->getParam("apiKey")->value() == apiKey;
     }
 
     return false;

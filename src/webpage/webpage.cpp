@@ -44,19 +44,19 @@ void setupWeb()
         return request->requestAuthentication();
         }
 
-        if(!request->arg("apikey").length() == 0)
+        if(!request->arg("apiKey").length() == 0)
         {
-             apiKey = request->arg("apikey");
+             apiKey = request->arg("apiKey");
         }
 
-        if(!request->arg("admin_username").length() == 0)
+        if(!request->arg("webUser").length() == 0)
         {
-             webUser = request->arg("admin_username");
+             webUser = request->arg("webUser");
         }
 
-        if(!request->arg("admin_password").length() == 0)
+        if(!request->arg("webPassword").length() == 0)
         {
-             webPassword = request->arg("admin_password");
+             webPassword = request->arg("webPassword");
         }
        
         for(int i=0;i<DEVICE_COUNT;i++)
@@ -196,7 +196,7 @@ void setupWeb()
 
                 JsonDocument doc;
 
-                doc["apikey"] = generateApiKey();
+                doc["apiKey"] = generateApiKey();
 
                 String json;
                 ArduinoJson::serializeJson(doc, json);
