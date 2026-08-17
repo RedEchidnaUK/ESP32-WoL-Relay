@@ -23,7 +23,7 @@ int findDevice(String value)
     {
         id--;
 
-        if(id >= 0 && id < DEVICE_COUNT)
+        if(id >= 0 && id < DEVICE_COUNT && devices[id].enabled)
             return id;
     }
 
