@@ -12,14 +12,14 @@
 void setup()
 {
     Serial.begin(115200);
-    Serial.println("Started");
+    outputDebugLine("Started");
 
     pinMode(RESET_PIN, INPUT_PULLUP);
     pinMode(LED, OUTPUT);
 
     if (!LittleFS.begin())
     {
-        Serial.println("An Error has occurred while mounting LittleFS");
+        outputDebugLine("An Error has occurred while mounting LittleFS");
         return;
     }
 
