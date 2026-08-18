@@ -85,15 +85,21 @@ void setupWeb()
 
     server.on("/api/device", HTTP_GET, [](AsyncWebServerRequest *request)
               {
+                JsonDocument doc;
+                String json;
         if(!checkApiKey(request))
         {
-            request->send(401);
+            doc["error"] = "Invalid credentials";
+            ArduinoJson::serializeJson(doc, json);
+            request->send(401, "application/json", json);
             return;
         }
 
         if(!request->hasParam("id"))
         {
-            request->send(400);
+            doc["error"] = "Device ID not specified";
+            ArduinoJson::serializeJson(doc, json);
+            request->send(400, "application/json", json);
             return;
         }
 
@@ -103,35 +109,43 @@ void setupWeb()
 
         if(idx < 0)
         {
-            request->send(404);
+            doc["error"] = "Device ID invalid";
+            ArduinoJson::serializeJson(doc, json);
+            request->send(404, "application/json", json);
             return;
         }
 
-        JsonDocument doc;
+        if(!devices[idx].enabled)
+        {
+            doc["error"] = "Device disabled";
+            ArduinoJson::serializeJson(doc, json);
+            request->send(410, "application/json", json);
+            return;
+        }        
 
         doc["id"] = idx + 1;
         doc["name"] = devices[idx].name;
         doc["enabled"] = devices[idx].enabled;
         doc["online"] = devices[idx].online;
 
-        String json;
         ArduinoJson::serializeJson(doc, json);
 
         request->send(200, "application/json", json); });
 
     // GET ALL DEVICES
 
-    server.on("/api/devices",
-              HTTP_GET,
-              [](AsyncWebServerRequest *request)
+    server.on("/api/devices", HTTP_GET, [](AsyncWebServerRequest *request)
               {
+                JsonDocument doc;
+                String json;
+
                   if (!checkApiKey(request))
                   {
-                      request->send(401);
+                      doc["error"] = "Invalid credentials";
+                      ArduinoJson::serializeJson(doc, json);
+                      request->send(401, "application/json", json);
                       return;
                   }
-
-                  JsonDocument doc;
 
                   JsonArray arr = doc.to<JsonArray>();
 
@@ -140,19 +154,16 @@ void setupWeb()
                       if (!devices[i].enabled)
                           continue;
 
-                      JsonObject o =
-                          arr.add<JsonObject>();
+                      JsonObject o = arr.add<JsonObject>();
 
                       o["id"] = i + 1;
                       o["name"] = devices[i].name;
                       o["online"] = devices[i].online;
                   }
-
-                  String json;
+                  
                   ArduinoJson::serializeJson(doc, json);
 
-                  request->send(200, "application/json", json);
-              });
+                  request->send(200, "application/json", json); });
 
     // GET CONFIG
 
@@ -206,19 +217,23 @@ void setupWeb()
 
     // POST WAKE
 
-    server.on("/api/wake",
-              HTTP_POST,
-              [](AsyncWebServerRequest *request)
+    server.on("/api/wake", HTTP_POST, [](AsyncWebServerRequest *request)
               {
+                  JsonDocument doc;
+                  String json;
                   if (!checkApiKey(request))
                   {
-                      request->send(401);
+                      doc["error"] = "Invalid credentials";
+                      ArduinoJson::serializeJson(doc, json);
+                      request->send(401, "application/json", json);
                       return;
                   }
 
                   if (!request->hasParam("id"))
                   {
-                      request->send(400);
+                      doc["error"] = "Device ID not specified";
+                      ArduinoJson::serializeJson(doc, json);
+                      request->send(400, "application/json", json);
                       return;
                   }
 
@@ -226,23 +241,45 @@ void setupWeb()
 
                   if (idx < 0)
                   {
-                      request->send(404);
+                      doc["error"] = "Device disabled";
+                      ArduinoJson::serializeJson(doc, json);
+                      request->send(404, "application/json", json);
                       return;
                   }
 
-                  bool result = sendWOL(idx);
+                  if (!devices[idx].enabled)
+                  {
+                      JsonDocument doc;
 
-                  JsonDocument doc;
+                      doc["error"] = "Device disabled";
 
-                  doc["success"] = result;
-                  doc["id"] = idx + 1;
-                  doc["name"] = devices[idx].name;
+                      String json;
+                      ArduinoJson::serializeJson(doc, json);
+                      request->send(410, "application/json", json);
+                      return;
+                  }
 
-                  String json;
-                  ArduinoJson::serializeJson(doc, json);
+                  if (sendWOL(idx))
+                  {
 
-                  request->send(result ? 200 : 500, "application/json", json);
-              });
+                      doc["success"] = true;
+                      doc["id"] = idx + 1;
+                      doc["name"] = devices[idx].name;
+
+                      ArduinoJson::serializeJson(doc, json);
+
+                      request->send(200, "application/json", json);
+                  }
+                  else
+                  {
+                      doc["success"] = "false";
+                      doc["id"] = idx + 1;
+                      doc["name"] = devices[idx].name;
+
+                      ArduinoJson::serializeJson(doc, json);
+
+                      request->send(500, "application/json", json);
+                  } });
 
     server.begin();
 }

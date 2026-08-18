@@ -23,13 +23,13 @@ int findDevice(String value)
     {
         id--;
 
-        if(id >= 0 && id < DEVICE_COUNT && devices[id].enabled)
+        if(id >= 0 && id < DEVICE_COUNT)
             return id;
     }
 
     for(int i=0;i<DEVICE_COUNT;i++)
     {
-        if(devices[i].name.equalsIgnoreCase(value) && devices[i].enabled)
+        if(devices[i].name.equalsIgnoreCase(value))
             return i;
     }
 
