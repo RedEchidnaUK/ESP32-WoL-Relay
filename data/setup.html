@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 Wake on Lan Relay</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h2>ESP32 WoL Relay Setup</h2>
+    <form method="POST" action="/save">
+        <h3>WiFi Settings</h3>
+        <label for="ssid">WiFi SSID:</label>
+        <input type="ssid" id="ssid" name="ssid" size='32'>
+        <br>
+        <br>
+        <label for="password">WiFi Password:</label>
+        <input type="text" id="password" name="password" size='32'>
+        <br>
+        <br>
+        <h3>Admin Settings</h3>
+        <label for="webUser">Admin Username:</label>
+        <input type="text" id="webUser" name="webUser" size="32" value="admin">
+        <br>
+        <br>
+        <label for="webPassword">Admin Password:</label>
+        <input type="text" id="webPassword" name="webPassword" size="32">
+        <br>
+        <br>
+        <h3>API Settings</h3>
+        <label for="apiKey">API Key:</label>
+        <input type="text" id="apiKey" name="apiKey" size="40"><button type="button"
+            onclick="generateAPIKey()">Generate</button>
+        <br>
+        <small>You will not see the API Key again, but you can change it later</small>
+        <br>
+        <br>
+        <input type="submit" value="Save">
+    </form>
+    <script src="setup.js"></script>
+    <noscript>Sorry, your browser does not support JavaScript!</noscript>
+</body>
+
+</html>

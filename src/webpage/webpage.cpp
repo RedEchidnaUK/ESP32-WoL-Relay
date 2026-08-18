@@ -245,3 +245,82 @@ void setupWeb()
 
     server.begin();
 }
+
+void startSetupPortal()
+{
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP("ESP32 WoL Relay");
+
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(LittleFS, "/setup.html", String()); });
+
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(LittleFS, "/style.css", "text/css"); });
+
+    server.on("/setup.js", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(LittleFS, "/setup.js", "application/javascript"); });
+
+    server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+                JsonDocument doc;
+
+                doc["webUser"] = "admin";
+                doc["webPassword"] = WiFi.macAddress();
+                doc["apiKey"] = apiKey;
+
+                String json;
+                ArduinoJson::serializeJson(doc, json);
+
+                request->send(200, "application/json", json); });
+
+    server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
+              {
+        wifiSSID = request->arg("ssid");
+        wifiPassword = request->arg("password");
+        webUser = request->arg("webUser");
+        webPassword = request->arg("webPassword");
+        apiKey = request->arg("apiKey");
+
+        outputDebugLine(wifiSSID);
+        outputDebugLine(wifiPassword);
+        outputDebugLine(webUser);
+        outputDebugLine(webPassword);
+        outputDebugLine(apiKey);
+
+        if(wifiSSID.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
+        {
+            if (wifiSSID.length() == 0 || wifiPassword.length() == 0)
+            {
+                outputDebugLine("Missing SSID or password");
+            }
+            if (webUser.length() == 0 || webPassword.length() == 0)
+            {
+                outputDebugLine("Missing web username or password");
+            }
+            if (apiKey.length() == 0)
+            {
+                outputDebugLine("Missing API key");
+            }
+            request->send(400,"text/html","<html><head></meta http-equiv='refresh' content='3;url=/'></head><body><h2>Missing required fields</h2></body></html>");
+            return;
+        }
+
+        outputDebugLine("Saving config");
+        prefs.begin("wolrelay", false);
+        prefs.putString("wifiSSID", wifiSSID);
+        prefs.putString("wifiPassword", wifiPassword);
+
+        prefs.end();
+
+        saveConfig();
+
+        outputDebugLine("Sending reboot message");
+        request->send(200, "text/html", "<html><body><h2>Settings Saved. Rebooting...</h2></body></html>");
+
+        delay(3000);
+
+        outputDebugLine("Rebooting...");
+        ESP.restart(); });
+
+    server.begin();
+}

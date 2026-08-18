@@ -1,6 +1,5 @@
 #include "./config/config.h"
 #include "./storage/storage.h"
-#include "./wol/wol.h"
 #include "./network/network.h"
 #include "./api/api.h"
 #include "./webpage/webpage.h"

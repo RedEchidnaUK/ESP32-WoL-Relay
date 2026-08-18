@@ -3,12 +3,16 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <ESPAsyncWebServer.h>
+#include <WiFi.h>
+#include <ESP32Ping.h>
+#include <ArduinoJson.h>
+#include <FS.h>
+#include <LittleFS.h>
 
 #define RESET_PIN 0
 #define RESET_HOLD_TIME 5000
 #define LED 2
 #define DEVICE_COUNT 10
-
 #define DEBUG 1
 
 #if DEBUG==1
