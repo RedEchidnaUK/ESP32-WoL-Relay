@@ -112,7 +112,7 @@ void setupWeb()
         doc["id"] = idx + 1;
         doc["name"] = devices[idx].name;
         doc["enabled"] = devices[idx].enabled;
-        doc["online"] = pingHost(devices[idx].ip);
+        doc["online"] = devices[idx].online;
 
         String json;
         ArduinoJson::serializeJson(doc, json);
@@ -145,7 +145,7 @@ void setupWeb()
 
                       o["id"] = i + 1;
                       o["name"] = devices[i].name;
-                      o["online"] = pingHost(devices[i].ip);
+                      o["online"] = devices[i].online;
                   }
 
                   String json;
@@ -180,6 +180,7 @@ void setupWeb()
                     device["ip"] = devices[i].ip;
                     device["broadcast"] = devices[i].broadcast;
                     device["enabled"] = devices[i].enabled;
+                    device["online"] = devices[i].online;
                 }
 
                 String json;

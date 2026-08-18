@@ -14,6 +14,7 @@
 #define LED 2
 #define DEVICE_COUNT 10
 #define DEBUG 1
+#define STATUS_CHECK_INTERVAL 30000
 
 #if DEBUG==1
 #define outputDebug(x); Serial.print(x);
@@ -26,6 +27,7 @@
 struct Device
 {
     bool enabled;
+    bool online;
     String name;
     String mac;
     String ip;
@@ -39,6 +41,7 @@ extern String wifiSSID;
 extern String wifiPassword;
 extern String webUser;
 extern String webPassword;
+extern u_long lastStatusCheck;
 
 extern Preferences prefs;
 extern AsyncWebServer server;

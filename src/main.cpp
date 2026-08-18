@@ -27,10 +27,10 @@ void setup()
     bool apiKeyExists = prefs.isKey("apiKey");
     prefs.end();
 
-    if(!apiKeyExists)
-    {  
+    if (!apiKeyExists)
+    {
         outputDebugLine("Preferences is empty");
-        
+
         apiKey = generateApiKey();
         outputDebugLine("Generated new API key: " + apiKey);
 
@@ -45,6 +45,7 @@ void setup()
         {
             outputDebugLine("Connected to WiFi");
             outputDebugLine(WiFi.localIP());
+            updateDeviceStatus();
             setupWeb();
         }
         else
@@ -62,4 +63,9 @@ void setup()
 void loop()
 {
     checkResetButton();
+    if (millis() - lastStatusCheck >= STATUS_CHECK_INTERVAL)
+    {
+        lastStatusCheck = millis();
+        updateDeviceStatus();
+    }
 }

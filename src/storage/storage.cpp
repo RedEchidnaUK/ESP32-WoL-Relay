@@ -32,7 +32,7 @@ void saveConfig()
 
 void loadConfig()
 {
-    
+
     prefs.begin("wolrelay", true);
 
     apiKey = prefs.getString("apiKey", "");
@@ -104,5 +104,20 @@ void checkResetButton()
     else
     {
         buttonPressed = false;
+    }
+}
+
+void updateDeviceStatus()
+{
+    outputDebugLine("Updating device status");
+
+    for (int i = 0; i < DEVICE_COUNT; i++)
+    {
+        devices[i].online = false;
+
+        if (!devices[i].enabled)
+            continue;
+
+        devices[i].online = pingHost(devices[i].ip);
     }
 }
