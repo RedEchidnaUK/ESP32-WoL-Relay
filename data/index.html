@@ -10,7 +10,7 @@
 
 <body>
     <h2>ESP32 WoL Relay</h2>
-    <form method="POST" action="/save">
+    <form method="POST" action="/save" id="save" class="form">
         <h3>Admin Settings</h3>
         <label for="webUser">Admin Username:</label>
         <input type="text" id="webUser" name="webUser" size="32">
@@ -41,7 +41,7 @@
             </tbody>
         </table>
         <br>
-        <input type="submit" value="Save">
+        <input type="submit" value="Save" id="saveButton">
     </form>
     <script src="script.js"></script>
     <noscript>Sorry, your browser does not support JavaScript!</noscript>
