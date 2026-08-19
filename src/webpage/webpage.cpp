@@ -136,10 +136,9 @@ void setupWeb()
 
     server.on("/api/devices", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                JsonDocument doc;
-                String json;
-
-                  if (!checkApiKey(request))
+                  JsonDocument doc;
+                  String json;
+                  if(!checkApiKey(request))
                   {
                       doc["error"] = "Invalid credentials";
                       ArduinoJson::serializeJson(doc, json);
