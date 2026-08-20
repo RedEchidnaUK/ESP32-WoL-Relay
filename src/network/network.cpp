@@ -41,16 +41,13 @@ bool pingHost(String ip)
 {
     IPAddress remote_ip;
 
-    outputDebugLine("Pinging IP: " + remote_ip.fromString(ip));
 
     if (Ping.ping(remote_ip.fromString(ip), 1))
     {
-        outputDebugLine("Ping success");
-        return true;
+     return true;
     }
     else
     {
-        outputDebugLine("Ping failed");
-        return false;
+       return false;
     }
 }
