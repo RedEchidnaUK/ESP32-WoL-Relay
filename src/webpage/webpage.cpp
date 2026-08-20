@@ -75,9 +75,13 @@ void setupWeb()
                     return request->requestAuthentication();
                 }
 
-                if (!request->arg("apiKey").isEmpty())
+                if (!request->arg("webUser").isEmpty())
                 {
-                    apiKey = request->arg("apiKey");
+                    wifiSSID = request->arg("webSSID");
+                }
+                if (!request->arg("wifiPassword").isEmpty())
+                {
+                    wifiPassword = request->arg("webPassword");
                 }
                 if (!request->arg("webUser").isEmpty())
                 {
@@ -87,7 +91,10 @@ void setupWeb()
                 {
                     webPassword = request->arg("webPassword");
                 }
-
+                if (!request->arg("apiKey").isEmpty())
+                {
+                    apiKey = request->arg("apiKey");
+                }
                 JsonDocument doc;
                 JsonArray errors = doc["errors"].to<JsonArray>();
 
