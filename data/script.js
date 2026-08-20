@@ -174,3 +174,43 @@ document.getElementById("save").addEventListener('input', debounce(function (e) 
         checkInput(id);
     }
 }));
+
+document.getElementById("save").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    console.log(formData);
+
+    const response = await fetch("/save", {
+        method: "POST",
+        body: formData
+    });
+
+    const result = await response.json();
+
+    document
+        .querySelectorAll(".server-error")
+        .forEach(el => el.classList.remove("server-error"));
+
+    console.log(result);
+
+    alertbox(`Saved ${result.saved} device(s)<br>` +
+        `Skipped ${result.skipped} device(s)<br>` +
+        result.errors
+            .map(e => `Row ${e.row}: ${e.message}`)
+            .join("<br>"));
+});
+
+let alertBox = document.getElementById("customAlertBox");
+let alert_Message_container = document.getElementById("alertMessage");
+let close_img = document.querySelector(".close");
+
+function alertbox(html) {
+    alert_Message_container.innerHTML = html;
+    alertBox.style.display = "block";
+}
+
+close_img.addEventListener
+    ('click', function () {
+        alertBox.style.display = "none";
+    });
