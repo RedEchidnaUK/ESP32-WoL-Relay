@@ -20,6 +20,11 @@ th {
     padding: 5px
 }
 
+.form-field {
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
 .form-field input {
     border: solid 2px #f0f0f0;
     border-radius: 3px;
@@ -54,7 +59,8 @@ th {
     cursor: not-allowed;
 }
 
-.custom-button, .custom-button-small{
+.custom-button,
+.custom-button-small {
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -63,8 +69,9 @@ th {
     transition: background-color 0.3s;
 }
 
-.custom-button{
-    padding: 10px 20px;
+.custom-button {
+    padding: 10px 20%;
+    min-width: 80px;
     font-size: 18px;
 }
 
@@ -73,7 +80,8 @@ th {
     font-size: 14px;
 }
 
-.custom-button:hover, .custom-button-small:hover {
+.custom-button:hover,
+.custom-button-small:hover {
     background-color: #a04545;
 }
 
@@ -157,7 +165,7 @@ th {
 }
 
 .checkbox-wrapper-22 input:checked+.slider {
-    background-color: #66bb6a;
+    background-color: #4CAF50;
 }
 
 .checkbox-wrapper-22 input:checked+.slider:before {
@@ -170,4 +178,42 @@ th {
 
 .checkbox-wrapper-22 .slider.round:before {
     border-radius: 50%;
+}
+
+.collapsible {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    border-radius: 4px;
+    margin: 4px;
+}
+
+.active,
+.collapsible:hover {
+    background-color: #a04545;
+}
+
+.collapsible:after {
+    content: '\002B';
+    color: white;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+}
+
+.active:after {
+    content: "\2212";
+}
+
+.content {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
 }

@@ -231,6 +231,7 @@ void setupWeb()
         JsonDocument doc;
 
         doc["webuser"] = webUser;
+        doc["wifissid"] = wifiSSID;
 
         JsonArray deviceArray = doc["devices"].to<JsonArray>();
 

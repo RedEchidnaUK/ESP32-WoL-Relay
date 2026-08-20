@@ -11,41 +11,57 @@
 <body>
     <h2>ESP32 WoL Relay</h2>
     <form method="POST" action="/save" id="save" class="form">
-        <h3>Admin Settings</h3>
-        <div class="form-field">
-            <label for="webUser">Admin Username:</label>
-            <input type="text" id="webUser" name="webUser" size="32">
+        <button type="button" class="collapsible"><span class="h3">WiFi Settings</span></button>
+        <div class="content">
+            <div class="form-field">
+                <label for="wifiSSID">WiFi SSID:</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="text" id="wifiSSID" name="wifiSSID" size="32">
+                <br>
+                <br>
+                <label for="wifiPassword">WiFi Password:</label>&nbsp;
+                <input type="password" id="wifiPassword" name="wifiPassword" size="32">
+            </div>
+        </div>
+        <button type="button" class="collapsible"><span class="h3">Admin Settings</span></button>
+        <div class="content">
+            <div class="form-field">
+                <label for="webUser">Admin Username:</label>
+                <input type="text" id="webUser" name="webUser" size="32">
+                <br>
+                <br>
+                <label for="webPassword">Admin Password:</label>&nbsp;
+                <input type="password" id="webPassword" name="webPassword" size="32">
+            </div>
+        </div>
+        <button type="button" class="collapsible"><span class="h3">API Settings</span></button>
+        <div class="content">
+            <div class="form-field">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
+                    onclick="generateAPIKey()" class="custom-button-small">Generate</button>
+            </div>
+        </div>
+        <button type="button" class="collapsible"><span class="h3">Device Settings</span></button>
+        <div class="content">
+            <div class="form-field">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>MAC</th>
+                            <th>IP</th>
+                            <th>Broadcast</th>
+                            <th>Enabled</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceTable">
+                    </tbody>
+                </table>
+            </div>
+            
         </div>
         <br>
-        <div class="form-field">
-            <label for="webPassword">Admin Password:</label>&nbsp;
-            <input type="password" id="webPassword" name="webPassword" size="32">
-        </div>
-        <br>
-        <br>
-        <h3>API Settings</h3>
-        <div class="form-field">
-            <label for="apiKey">API Key:</label>
-            <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
-                onclick="generateAPIKey()" class="custom-button-small">Generate</button>
-        </div>
-        <br>
-        <br>
-        <h3>Device Settings</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>MAC</th>
-                    <th>IP</th>
-                    <th>Broadcast</th>
-                    <th>Enabled</th>
-                </tr>
-            </thead>
-            <tbody id="deviceTable">
-            </tbody>
-        </table>
         <br>
         <div class="center">
             <input type="submit" value="Save" id="saveButton" class="custom-button">
