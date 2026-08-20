@@ -23,6 +23,13 @@ th {
 .form-field input {
     border: solid 2px #f0f0f0;
     border-radius: 3px;
+    padding: 5px;
+    font-size: 14px;
+}
+
+.form-field-table input {
+    border: solid 2px #f0f0f0;
+    border-radius: 3px;
     padding: 10px;
     font-size: 14px;
     display: block;
@@ -32,17 +39,42 @@ th {
     box-sizing: border-box;
 }
 
-.form-field.error input {
+.form-field-table.error input:focus {
     border-color: var(--error-color);
+    outline-color: var(--error-color);
 }
 
-.form-field.success input {
+.form-field-table.success input:focus {
     border-color: var(--success-color);
+    outline-color: var(--success-color);
 }
 
 .input-disabled {
     background-color: #e2e2e2;
     cursor: not-allowed;
+}
+
+.custom-button, .custom-button-small{
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.custom-button{
+    padding: 10px 20px;
+    font-size: 18px;
+}
+
+.custom-button-small {
+    padding: 7px 20px;
+    font-size: 14px;
+}
+
+.custom-button:hover, .custom-button-small:hover {
+    background-color: #a04545;
 }
 
 .custom-alert {
@@ -67,7 +99,6 @@ th {
     max-width: 400px;
     border-radius: 8px;
     position: relative;
-
 }
 
 .close {
@@ -88,3 +119,55 @@ th {
     color: #28a745;
 }
 
+.center {
+    text-align: center;
+}
+
+.checkbox-wrapper-22 .switch {
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    width: 42px;
+}
+
+.checkbox-wrapper-22 .switch input {
+    display: none;
+}
+
+.checkbox-wrapper-22 .slider {
+    background-color: #e2e2e2;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+}
+
+.checkbox-wrapper-22 .slider:before {
+    background-color: #fff;
+    bottom: 2px;
+    content: "";
+    height: 20px;
+    left: 2px;
+    position: absolute;
+    transition: .4s;
+    width: 20px;
+}
+
+.checkbox-wrapper-22 input:checked+.slider {
+    background-color: #66bb6a;
+}
+
+.checkbox-wrapper-22 input:checked+.slider:before {
+    transform: translateX(18px);
+}
+
+.checkbox-wrapper-22 .slider.round {
+    border-radius: 20px;
+}
+
+.checkbox-wrapper-22 .slider.round:before {
+    border-radius: 50%;
+}

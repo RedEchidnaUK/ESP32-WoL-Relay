@@ -12,17 +12,23 @@
     <h2>ESP32 WoL Relay</h2>
     <form method="POST" action="/save" id="save" class="form">
         <h3>Admin Settings</h3>
-        <label for="webUser">Admin Username:</label>
-        <input type="text" id="webUser" name="webUser" size="32">
+        <div class="form-field">
+            <label for="webUser">Admin Username:</label>
+            <input type="text" id="webUser" name="webUser" size="32">
+        </div>
         <br>
-        <br>
-        <label for="webPassword">Admin Password:</label>
-        <input type="password" id="webPassword" name="webPassword" size="32">
+        <div class="form-field">
+            <label for="webPassword">Admin Password:</label>&nbsp;
+            <input type="password" id="webPassword" name="webPassword" size="32">
+        </div>
         <br>
         <br>
         <h3>API Settings</h3>
-        <label for="apiKey">API Key:</label>
-        <input type="text" id="apiKey" name="apiKey" size="40"><button type="button" onclick="generateAPIKey()">Generate</button>
+        <div class="form-field">
+            <label for="apiKey">API Key:</label>
+            <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
+                onclick="generateAPIKey()" class="custom-button-small">Generate</button>
+        </div>
         <br>
         <br>
         <h3>Device Settings</h3>
@@ -41,7 +47,10 @@
             </tbody>
         </table>
         <br>
-        <input type="submit" value="Save" id="saveButton" class="custom-button">
+        <div class="center">
+            <input type="submit" value="Save" id="saveButton" class="custom-button">
+        </div>
+
     </form>
     <div id="customAlertBox" class="custom-alert">
         <div class="custom-alert-content">
@@ -52,4 +61,5 @@
     <script src="script.js"></script>
     <noscript>Sorry, your browser does not support JavaScript!</noscript>
 </body>
+
 </html>

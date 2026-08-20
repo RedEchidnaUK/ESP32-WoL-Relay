@@ -23,7 +23,7 @@ function buildDeviceTable(devices) {
             <td>${device.id}</td>
 
             <td>
-                <div class="form-field">
+                <div class="form-field-table">
                     <input
                         type="text"
                         name="name${device.id - 1}"
@@ -33,7 +33,7 @@ function buildDeviceTable(devices) {
             </td>
 
             <td>
-                <div class="form-field">
+                <div class="form-field-table">
                     <input
                         type="text"
                         name="mac${device.id - 1}"
@@ -44,7 +44,7 @@ function buildDeviceTable(devices) {
             </td>
 
             <td>
-                <div class="form-field">
+                <div class="form-field-table">
                     <input
                         type="text"
                         name="ip${device.id - 1}"
@@ -55,7 +55,7 @@ function buildDeviceTable(devices) {
             </td>
 
             <td>
-                <div class="form-field">
+                <div class="form-field-table">
                     <input
                         type="text"
                         name="bc${device.id - 1}"
@@ -66,13 +66,19 @@ function buildDeviceTable(devices) {
             </td>
 
             <td style="text-align:center">
-                <input
-                    type="checkbox"
-                    name="en${device.id - 1}"
-                    id="en${device.id - 1}"
-                    ${device.enabled ? 'checked' : ''}>
+                <div class="checkbox-wrapper-22">
+                    <label class="switch" for="en${device.id - 1}">
+                        <input type="checkbox"
+                            name="en${device.id - 1}"
+                            id="en${device.id - 1}"
+                            ${device.enabled ? 'checked' : ''}>
+                        <div class="slider round"></div>
+                    </label>
+                </div>
             </td>
         `;
+
+        row.style = "text-align: center";
 
         tbody.appendChild(row);
 
@@ -195,7 +201,6 @@ document.getElementById("save").addEventListener("submit", async (e) => {
     console.log(result);
 
     alertbox(`Saved ${result.saved} device(s)<br>` +
-        `Skipped ${result.skipped} device(s)<br>` +
         result.errors
             .map(e => `Row ${e.row}: ${e.message}`)
             .join("<br>"));
