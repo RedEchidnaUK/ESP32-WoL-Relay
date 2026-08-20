@@ -92,7 +92,6 @@ void setupWeb()
                 JsonArray errors = doc["errors"].to<JsonArray>();
 
                 int saved = 0;
-                int skipped = 0;
 
                 for (int i = 0; i < DEVICE_COUNT; ++i)
                 {
@@ -106,15 +105,7 @@ void setupWeb()
                     String ip = request->arg("ip" + row);
                     String bc = request->arg("bc" + row);
 
-                    if (mac.isEmpty() && ip.isEmpty() && bc.isEmpty())
-                    {
-                        outputDebug("Skipping row: ");
-                        outputDebugLine(i);
-                        skipped++;
-                        continue;
-                    }
-
-                    if (!isValidMACAddress(mac) || !isValidIPAddress(ip) || !isValidIPAddress(bc))
+                    if ((!isValidMACAddress(mac) || !isValidIPAddress(ip) || !isValidIPAddress(bc)) && !(mac.isEmpty() && ip.isEmpty() && bc.isEmpty()))
                     {
                         JsonObject error = errors.add<JsonObject>();
                         error["row"] = i + 1;
@@ -137,7 +128,6 @@ void setupWeb()
                 }
 
                 doc["saved"] = saved;
-                doc["skipped"] = skipped;
 
                 String json;
                 ArduinoJson::serializeJson(doc, json);
