@@ -1,3 +1,15 @@
+// 
+// Variables
+// 
+
+let alertBox = document.getElementById("customAlertBox");
+let alert_Message_container = document.getElementById("alertMessage");
+let close_img = document.querySelector(".close");
+
+// 
+// Async functions
+// 
+
 async function loadConfig() {
     try {
         const response = await fetch("/api/config");
@@ -11,6 +23,22 @@ async function loadConfig() {
         console.error(error);
     }
 }
+
+async function generateAPIKey() {
+    try {
+        const response = await fetch("/api/apikey");
+        const newAPIKey = await response.json();
+
+        document.getElementById("apiKey").value = newAPIKey.apiKey || "";
+    }
+    catch (error) {
+        console.error(error);
+    }
+}
+
+// 
+// Functions
+// 
 
 function buildDeviceTable(devices) {
     const tbody = document.getElementById("deviceTable");
@@ -93,18 +121,6 @@ function buildDeviceTable(devices) {
     });
 }
 
-async function generateAPIKey() {
-    try {
-        const response = await fetch("/api/apikey");
-        const newAPIKey = await response.json();
-
-        document.getElementById("apiKey").value = newAPIKey.apiKey || "";
-    }
-    catch (error) {
-        console.error(error);
-    }
-}
-
 const isIPAddresslValid = (ipAddress) => {
     const re = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     return re.test(ipAddress);
@@ -170,10 +186,36 @@ function updateRowEnabled(rowNumber) {
     }
 }
 
+
+function alertbox(html) {
+    alert_Message_container.innerHTML = html;
+    alertBox.style.display = "block";
+}
+
+function opensetting(settingName) {
+    var i;
+    var x = document.getElementsByClassName("setting-item-show");
+    for (i = 0; i < x.length; i++) {
+            x[i].classList.add("setting-item-hide");
+            x[i].classList.remove("setting-item-show");
+        }
+    document.getElementById(settingName).classList.add('setting-item-show');
+    document.getElementById(settingName).classList.remove('setting-item-hide');
+}
+
+// 
+// Event listeners
+// 
+
 window.addEventListener(
     "load",
     loadConfig
 );
+
+close_img.addEventListener
+    ('click', function () {
+        alertBox.style.display = "none";
+    });
 
 document.getElementById("save").addEventListener('input', debounce(function (e) {
     const id = e.target.id;
@@ -206,32 +248,3 @@ document.getElementById("save").addEventListener("submit", async (e) => {
             .map(e => `Row ${e.row}: ${e.message}`)
             .join("<br>"));
 });
-
-let alertBox = document.getElementById("customAlertBox");
-let alert_Message_container = document.getElementById("alertMessage");
-let close_img = document.querySelector(".close");
-
-function alertbox(html) {
-    alert_Message_container.innerHTML = html;
-    alertBox.style.display = "block";
-}
-
-close_img.addEventListener
-    ('click', function () {
-        alertBox.style.display = "none";
-    });
-
-var coll = document.getElementsByClassName("collapsible");
-var i;
-
-for (i = 0; i < coll.length; i++) {
-  coll[i].addEventListener("click", function() {
-    this.classList.toggle("active");
-    var content = this.nextElementSibling;
-    if (content.style.maxHeight){
-      content.style.maxHeight = null;
-    } else {
-      content.style.maxHeight = content.scrollHeight + "px";
-    } 
-  });
-}

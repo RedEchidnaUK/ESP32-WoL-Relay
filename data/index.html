@@ -10,39 +10,19 @@
 
 <body>
     <h2>ESP32 WoL Relay</h2>
-    <form method="POST" action="/save" id="save" class="form">
-        <button type="button" class="collapsible"><span class="h3">WiFi Settings</span></button>
-        <div class="content">
-            <div class="form-field">
-                <label for="wifiSSID">WiFi SSID:</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <input type="text" id="wifiSSID" name="wifiSSID" size="32">
-                <br>
-                <br>
-                <label for="wifiPassword">WiFi Password:</label>&nbsp;
-                <input type="password" id="wifiPassword" name="wifiPassword" size="32">
-            </div>
+    
+        <div class="bar">
+            <button class="bar-item bar-button" onclick="opensetting('devices')">Device
+                Settings</button>
+            <button class="bar-item bar-button" onclick="opensetting('wifi')">WiFi
+                Settings</button>
+            <button class="bar-item bar-button" onclick="opensetting('admin')">Admin
+                Settings</button>
+            <button class="bar-item bar-button" onclick="opensetting('api')">API
+                Settings</button>
         </div>
-        <button type="button" class="collapsible"><span class="h3">Admin Settings</span></button>
-        <div class="content">
-            <div class="form-field">
-                <label for="webUser">Admin Username:</label>
-                <input type="text" id="webUser" name="webUser" size="32">
-                <br>
-                <br>
-                <label for="webPassword">Admin Password:</label>&nbsp;
-                <input type="password" id="webPassword" name="webPassword" size="32">
-            </div>
-        </div>
-        <button type="button" class="collapsible"><span class="h3">API Settings</span></button>
-        <div class="content">
-            <div class="form-field">
-                <label for="apiKey">API Key:</label>
-                <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
-                    onclick="generateAPIKey()" class="custom-button-small">Generate</button>
-            </div>
-        </div>
-        <button type="button" class="collapsible"><span class="h3">Device Settings</span></button>
-        <div class="content">
+        <form method="POST" action="/save" id="save" class="form">
+        <div id="devices" class="setting-item-show">
             <div class="form-field">
                 <table>
                     <thead>
@@ -59,14 +39,44 @@
                     </tbody>
                 </table>
             </div>
-            
+        </div>
+        <div id="wifi" class="setting-item-hide">
+            <div class="form-field container">
+                <div class="left">
+                    <label for="wifiSSID">WiFi SSID:</label>
+                    <label for="wifiPassword">WiFi Password:</label>
+                </div>
+                <div class="right">
+                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32"></div>
+                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32"></div>
+                </div>
+            </div>
+        </div>
+        <div id="admin" class="setting-item-hide">
+            <div class="form-field container" >
+                <div class="left">
+                    <label for="webUser">Admin Username:</label>
+                    <label for="webPassword">Admin Password:</label>
+                </div>
+                <div class="right">
+                    <div><input type="text" id="webUser" name="webUser" size="32"></div>
+                    <div><input type="password" id="webPassword" name="webPassword" size="32"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="api" class="setting-item-hide">
+            <div class="form-field">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
+                    onclick="generateAPIKey()" class="custom-button-small">Generate</button>
+            </div>
         </div>
         <br>
         <br>
         <div class="center">
             <input type="submit" value="Save" id="saveButton" class="custom-button">
         </div>
-
     </form>
     <div id="customAlertBox" class="custom-alert">
         <div class="custom-alert-content">
