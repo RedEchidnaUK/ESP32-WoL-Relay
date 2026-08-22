@@ -211,7 +211,6 @@ th {
     color: inherit;
     background-color: inherit;
     text-align: center;
-    cursor: pointer;
     padding: 8px 16px;
     float: left;
     width: auto;
@@ -220,35 +219,45 @@ th {
     outline: 0;
     white-space: normal;
 }
- 
-.bar-button:hover{
+
+.bar-button {
+    cursor: pointer;
+}
+
+.bar-button:hover {
     transition: background-color 0.3s;
-    background-color: #a04545!important;
+    background-color: #a04545 !important;
 }
 
 .container {
-	display: flex;
-}
-.container > .right {
-	flex-grow: 1;
-}
-.container > div {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-around;
-	margin: 0 10px;
-}
-.container > div.left {
-	align-items: flex-start;
-}
-.left > div, .right > div {
-	margin: 5px 0;
-	height: 1.5em;
+    display: flex;
 }
 
-.setting-item-hide{
+.container>.right {
+    flex-grow: 1;
+}
+
+.container>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    margin: 0 10px;
+}
+
+.container>div.left {
+    align-items: flex-start;
+}
+
+.left>div,
+.right>div {
+    margin: 5px 0;
+    height: 1.5em;
+}
+
+.setting-item-hide {
     display: none;
 }
+
 .setting-item-show {
     display: block;
 }
