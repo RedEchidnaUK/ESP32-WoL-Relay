@@ -39,8 +39,8 @@ extern Device devices[DEVICE_COUNT];
 extern String apiKey;
 extern String wifiSSID;
 extern String wifiPassword;
-extern String webUser;
-extern String webPassword;
+extern String adminUser;
+extern String adminPassword;
 extern u_long lastStatusCheck;
 
 extern Preferences prefs;

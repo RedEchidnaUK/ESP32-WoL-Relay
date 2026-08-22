@@ -3,8 +3,8 @@
 bool authenticateWeb(AsyncWebServerRequest *request)
 {
     return request->authenticate(
-        webUser.c_str(),
-        webPassword.c_str());
+        adminUser.c_str(),
+        adminPassword.c_str());
 }
 
 bool isValidIPAddress(const String &ip)
@@ -75,28 +75,44 @@ void setupWeb()
                     return request->requestAuthentication();
                 }
 
-                if (!request->arg("webUser").isEmpty())
-                {
-                    wifiSSID = request->arg("webSSID");
-                }
-                if (!request->arg("wifiPassword").isEmpty())
-                {
-                    wifiPassword = request->arg("webPassword");
-                }
-                if (!request->arg("webUser").isEmpty())
-                {
-                    webUser = request->arg("webUser");
-                }
-                if (!request->arg("webPassword").isEmpty())
-                {
-                    webPassword = request->arg("webPassword");
-                }
-                if (!request->arg("apiKey").isEmpty())
-                {
-                    apiKey = request->arg("apiKey");
-                }
                 JsonDocument doc;
                 JsonArray errors = doc["errors"].to<JsonArray>();
+
+                String sentWifiSSID = request->arg("wifiSSID");
+                String sentWifiPassword = request->arg("wifiPassword");
+
+                if (!sentWifiSSID.isEmpty() && (sentWifiSSID != wifiSSID))
+                {
+                    wifiSSID = sentWifiSSID;
+                    doc["wifi"] = "Updated";
+                }
+                if (!sentWifiPassword.isEmpty() && (sentWifiPassword != wifiPassword))
+                {
+                    wifiPassword = sentWifiPassword;
+                    doc["wifi"] = "Updated";
+                }
+
+                String sentAdminUser = request->arg("adminUser");
+                String sentAdminPassword = request->arg("adminPassword");
+                
+                if (!sentAdminUser.isEmpty() && (sentAdminUser != adminUser))
+                {
+                    adminUser = sentAdminUser;
+                    doc["admin"] = "Updated";
+                }
+                if (!sentAdminPassword.isEmpty() && (sentAdminPassword != adminPassword))
+                {
+                    adminPassword = sentAdminPassword;
+                    doc["admin"] = "Updated";
+                }
+
+                String sentApiKey = request->arg("apiKey");
+
+                if (!sentApiKey.isEmpty() && (sentApiKey != apiKey))
+                {
+                    apiKey = sentApiKey;
+                    doc["api"] = "Updated";
+                }
 
                 int saved = 0;
 
@@ -237,7 +253,7 @@ void setupWeb()
 
         JsonDocument doc;
 
-        doc["webuser"] = webUser;
+        doc["adminUser"] = adminUser;
         doc["wifissid"] = wifiSSID;
 
         JsonArray deviceArray = doc["devices"].to<JsonArray>();
@@ -363,8 +379,8 @@ void startSetupPortal()
               {
                 JsonDocument doc;
 
-                doc["webUser"] = "admin";
-                doc["webPassword"] = WiFi.macAddress();
+                doc["adminUser"] = "admin";
+                doc["adminPassword"] = WiFi.macAddress();
                 doc["apiKey"] = apiKey;
 
                 String json;
@@ -376,23 +392,23 @@ void startSetupPortal()
               {
         wifiSSID = request->arg("ssid");
         wifiPassword = request->arg("password");
-        webUser = request->arg("webUser");
-        webPassword = request->arg("webPassword");
+        adminUser = request->arg("adminUser");
+        adminPassword = request->arg("adminPassword");
         apiKey = request->arg("apiKey");
 
         outputDebugLine(wifiSSID);
         outputDebugLine(wifiPassword);
-        outputDebugLine(webUser);
-        outputDebugLine(webPassword);
+        outputDebugLine(adminUser);
+        outputDebugLine(adminPassword);
         outputDebugLine(apiKey);
 
-        if(wifiSSID.length() == 0 || wifiPassword.length() == 0 || webUser.length() == 0 || webPassword.length() == 0 || apiKey.length() == 0)
+        if(wifiSSID.length() == 0 || wifiPassword.length() == 0 || adminUser.length() == 0 || adminPassword.length() == 0 || apiKey.length() == 0)
         {
             if (wifiSSID.length() == 0 || wifiPassword.length() == 0)
             {
                 outputDebugLine("Missing SSID or password");
             }
-            if (webUser.length() == 0 || webPassword.length() == 0)
+            if (adminUser.length() == 0 || adminPassword.length() == 0)
             {
                 outputDebugLine("Missing web username or password");
             }

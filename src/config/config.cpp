@@ -4,8 +4,8 @@ Device devices[DEVICE_COUNT];
 
 String apiKey = "";
 
-String webUser = "";
-String webPassword = "";
+String adminUser = "";
+String adminPassword = "";
 
 String wifiSSID = "";
 String wifiPassword = "";

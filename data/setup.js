@@ -5,8 +5,8 @@ async function loadConfig()
         const response = await fetch("/api/config");
         const config = await response.json();
 
-        document.getElementById("webUser").value = config.webUser || "";
-        document.getElementById("webPassword").value = config.webPassword || "";
+        document.getElementById("adminUser").value = config.adminUser || "";
+        document.getElementById("adminPassword").value = config.adminPassword || "";
         document.getElementById("apiKey").value = config.apiKey || "";
     }
     catch (error)

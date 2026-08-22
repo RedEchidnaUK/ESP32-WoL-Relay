@@ -9,10 +9,10 @@ void saveConfig()
 
     outputDebugLine("Saving apiKey");
     prefs.putString("apiKey", apiKey);
-    outputDebugLine("Saving webUser");
-    prefs.putString("webUser", webUser);
-    outputDebugLine("Saving webPassword");
-    prefs.putString("webPassword", webPassword);
+    outputDebugLine("Saving adminUser");
+    prefs.putString("adminUser", adminUser);
+    outputDebugLine("Saving adminPassword");
+    prefs.putString("adminPassword", adminPassword);
 
     outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)
@@ -63,10 +63,10 @@ void loadConfig()
     wifiPassword = prefs.getString("wifiPassword", "");
     outputDebugLine("WIFI Password: " + wifiPassword);
 
-    webUser = prefs.getString("webUser");
-    outputDebugLine("Admin user: " + webUser);
-    webPassword = prefs.getString("webPassword");
-    outputDebugLine("Admin Password: " + webPassword);
+    adminUser = prefs.getString("adminUser");
+    outputDebugLine("Admin user: " + adminUser);
+    adminPassword = prefs.getString("adminPassword");
+    outputDebugLine("Admin Password: " + adminPassword);
 
     prefs.end();
 }

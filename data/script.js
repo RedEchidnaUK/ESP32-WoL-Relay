@@ -16,7 +16,7 @@ async function loadConfig() {
         const config = await response.json();
 
         buildDeviceTable(config.devices);
-        document.getElementById("webUser").value = config.webuser || "";
+        document.getElementById("adminUser").value = config.adminUser || "";
         document.getElementById("wifiSSID").value = config.wifissid || "";
     }
     catch (error) {
@@ -196,9 +196,9 @@ function opensetting(settingName) {
     var i;
     var x = document.getElementsByClassName("setting-item-show");
     for (i = 0; i < x.length; i++) {
-            x[i].classList.add("setting-item-hide");
-            x[i].classList.remove("setting-item-show");
-        }
+        x[i].classList.add("setting-item-hide");
+        x[i].classList.remove("setting-item-show");
+    }
     document.getElementById(settingName).classList.add('setting-item-show');
     document.getElementById(settingName).classList.remove('setting-item-hide');
 }
@@ -243,8 +243,25 @@ document.getElementById("save").addEventListener("submit", async (e) => {
 
     console.log(result);
 
-    alertbox(`Saved ${result.saved} device(s)<br>` +
+    let alertText = ""
+
+    if (result.wifi) {
+        alertText = alertText + `WiFi Settings: ${result.wifi}<br>`
+    }
+
+    if (result.admin) {
+        alertText = alertText + `Admin Settings: ${result.admin}<br>`
+    }
+
+    if (result.api) {
+        alertText = alertText + `API Settings: ${result.api}<br>`
+    }
+
+    alertText = alertText + `Device Settings: <br>` +
+        `Saved ${result.saved} device(s)<br>` +
         result.errors
             .map(e => `Row ${e.row}: ${e.message}`)
-            .join("<br>"));
+            .join("<br>")
+
+    alertbox(alertText);
 });
