@@ -11,8 +11,9 @@
 <body>
     <h2>ESP32 WoL Relay Setup</h2>
     <form method="POST" action="/save"></form>
-    <div class="bar" style="padding: 8px 16px;">
-        WiFi Settings
+    <div class="bar">
+        <div class="bar-item">WiFi Settings</div>
+    </div>
     </div>
     <div class="form-field container">
         <div class="left">
@@ -24,7 +25,9 @@
             <div><input type="password" id="wifiPassword" name="wifiPassword" size="32"></div>
         </div>
     </div>
-    <div class="bar" style="padding: 8px 16px;">Admin Settings</div>
+    <div class="bar">
+        <div class="bar-item">Admin Settings</div>
+    </div>
     <div class="form-field container">
         <div class="left">
             <label for="adminUser">Admin Username:</label>
@@ -35,7 +38,9 @@
             <div><input type="password" id="adminPassword" name="adminPassword" size="32"></div>
         </div>
     </div>
-    <div class="bar" style="padding: 8px 16px;">API Settings</div>
+    <div class="bar">
+        <div class="bar-item">API Settings</div>
+    </div>
     <div class="form-field">
         <label for="apiKey">API Key:</label>
         <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
