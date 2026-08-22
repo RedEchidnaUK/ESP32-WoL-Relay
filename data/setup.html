@@ -10,34 +10,42 @@
 
 <body>
     <h2>ESP32 WoL Relay Setup</h2>
-    <form method="POST" action="/save">
-        <h3>WiFi Settings</h3>
-        <label for="ssid">WiFi SSID:</label>
-        <input type="ssid" id="ssid" name="ssid" size='32'>
-        <br>
-        <br>
-        <label for="password">WiFi Password:</label>
-        <input type="text" id="password" name="password" size='32'>
-        <br>
-        <br>
-        <h3>Admin Settings</h3>
-        <label for="webUser">Admin Username:</label>
-        <input type="text" id="webUser" name="webUser" size="32" value="admin">
-        <br>
-        <br>
-        <label for="webPassword">Admin Password:</label>
-        <input type="text" id="webPassword" name="webPassword" size="32">
-        <br>
-        <br>
-        <h3>API Settings</h3>
+    <form method="POST" action="/save"></form>
+    <div class="bar" style="padding: 8px 16px;">
+        WiFi Settings
+    </div>
+    <div class="form-field container">
+        <div class="left">
+            <label for="wifiSSID">WiFi SSID:</label>
+            <label for="wifiPassword">WiFi Password:</label>
+        </div>
+        <div class="right">
+            <div><input type="text" id="wifiSSID" name="wifiSSID" size="32"></div>
+            <div><input type="password" id="wifiPassword" name="wifiPassword" size="32"></div>
+        </div>
+    </div>
+    <div class="bar" style="padding: 8px 16px;">Admin Settings</div>
+    <div class="form-field container">
+        <div class="left">
+            <label for="webUser">Admin Username:</label>
+            <label for="webPassword">Admin Password:</label>
+        </div>
+        <div class="right">
+            <div><input type="text" id="webUser" name="webUser" size="32" value="admin"></div>
+            <div><input type="password" id="webPassword" name="webPassword" size="32"></div>
+        </div>
+    </div>
+    <div class="bar" style="padding: 8px 16px;">API Settings</div>
+    <div class="form-field">
         <label for="apiKey">API Key:</label>
-        <input type="text" id="apiKey" name="apiKey" size="40"><button type="button"
-            onclick="generateAPIKey()">Generate</button>
+        <input type="text" id="apiKey" name="apiKey" size="40" class="form-field">&nbsp;<button type="button"
+            onclick="generateAPIKey()" class="custom-button-small">Generate</button>
         <br>
         <small>You will not see the API Key again, but you can change it later</small>
-        <br>
-        <br>
-        <input type="submit" value="Save">
+    </div>
+    <div class="center">
+        <input type="submit" value="Save" id="saveButton" class="custom-button">
+    </div>
     </form>
     <script src="setup.js"></script>
     <noscript>Sorry, your browser does not support JavaScript!</noscript>
