@@ -390,11 +390,13 @@ void startSetupPortal()
 
     server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
               {
-        wifiSSID = request->arg("ssid");
-        wifiPassword = request->arg("password");
+        wifiSSID = request->arg("wifiSSID");
+        wifiPassword = request->arg("wifiPassword");
         adminUser = request->arg("adminUser");
         adminPassword = request->arg("adminPassword");
         apiKey = request->arg("apiKey");
+
+        int errorCode = 0;
 
         outputDebugLine(wifiSSID);
         outputDebugLine(wifiPassword);
@@ -402,21 +404,56 @@ void startSetupPortal()
         outputDebugLine(adminPassword);
         outputDebugLine(apiKey);
 
+        JsonDocument doc;
+        String json;
+
         if(wifiSSID.length() == 0 || wifiPassword.length() == 0 || adminUser.length() == 0 || adminPassword.length() == 0 || apiKey.length() == 0)
-        {
+        {            
             if (wifiSSID.length() == 0 || wifiPassword.length() == 0)
             {
                 outputDebugLine("Missing SSID or password");
+                errorCode = 1;
             }
             if (adminUser.length() == 0 || adminPassword.length() == 0)
             {
-                outputDebugLine("Missing web username or password");
+                outputDebugLine("Missing admin username or password");
+                errorCode = 2 + errorCode;
             }
             if (apiKey.length() == 0)
             {
                 outputDebugLine("Missing API key");
+                errorCode = 4 + errorCode;
             }
-            request->send(400,"text/html","<html><head></meta http-equiv='refresh' content='3;url=/'></head><body><h2>Missing required fields</h2></body></html>");
+
+            switch (errorCode)
+            {
+            case 1:
+                doc["result"] = "Invalid WiFi settings";
+                break;
+            case 2:
+                doc["result"] = "Invalid Admin settings";
+                break;
+            case 3:
+                doc["result"] = "Invalid WiFi and Admin Settings";
+                break;
+            case 4:
+                doc["result"] = "Invalid API Settings";
+                break;
+            case 5:
+                doc["result"] = "Invalid WiFi and API Settings";
+                break;
+            case 6:
+                doc["result"] = "Invalid Admin and API Settings";
+                break;
+            case 7:
+                doc["result"] = "Invalid WiFi, Admin and API Settings";
+                break;           
+            default:
+                doc["result"] = "Unknown error!";
+                break;
+            }
+            ArduinoJson::serializeJson(doc, json);
+            request->send(400, "application/json", json); 
             return;
         }
 
@@ -429,13 +466,24 @@ void startSetupPortal()
 
         saveConfig();
 
+        doc["result"] = "Success!";
+        ArduinoJson::serializeJson(doc, json);
         outputDebugLine("Sending reboot message");
-        request->send(200, "text/html", "<html><body><h2>Settings Saved. Rebooting...</h2></body></html>");
+        rebootRequested = true;
+        rebootTime = millis() + 5500;
 
-        delay(3000);
+        request->send(200, "application/json", json); });
 
-        outputDebugLine("Rebooting...");
-        ESP.restart(); });
+    server.on("/api/apikey", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        JsonDocument doc;
+
+        doc["apiKey"] = generateApiKey();
+
+        String json;
+        ArduinoJson::serializeJson(doc, json);
+
+        request->send(200, "application/json", json); });
 
     server.begin();
 }

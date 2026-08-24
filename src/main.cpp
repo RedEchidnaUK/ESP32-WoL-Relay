@@ -68,4 +68,9 @@ void loop()
         lastStatusCheck = millis();
         updateDeviceStatus();
     }
+    if (rebootRequested && millis() >= rebootTime)
+    {
+        outputDebugLine("Rebooting...");
+        ESP.restart();
+    }
 }

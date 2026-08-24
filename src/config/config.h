@@ -42,6 +42,9 @@ extern String wifiPassword;
 extern String adminUser;
 extern String adminPassword;
 extern u_long lastStatusCheck;
+extern u_long rebootTime;
+extern bool rebootRequested;
+
 
 extern Preferences prefs;
 extern AsyncWebServer server;

@@ -261,3 +261,7 @@ th {
 .setting-item-show {
     display: block;
 }
+
+small {
+    padding: 3px;
+}
