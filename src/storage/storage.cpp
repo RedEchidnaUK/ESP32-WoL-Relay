@@ -13,6 +13,10 @@ void saveConfig()
     prefs.putString("adminUser", adminUser);
     outputDebugLine("Saving adminPassword");
     prefs.putString("adminPassword", adminPassword);
+    outputDebugLine("Saving wifiSSID");
+    prefs.putString("wifiSSID", wifiSSID);
+    outputDebugLine("Saving wifiPassword");
+    prefs.putString("wifiPassword", wifiPassword);
 
     outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)
@@ -27,7 +31,7 @@ void saveConfig()
     }
 
     prefs.end();
-    outputDebugLine("Save complete")
+    outputDebugLine("Save complete");
 }
 
 void loadConfig()
