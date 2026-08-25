@@ -2,14 +2,14 @@
 
 bool checkApiKey(AsyncWebServerRequest *request)
 {
-    if(request->hasHeader("X-API-Key"))
+    if (request->hasHeader("X-API-Key"))
     {
         return request->getHeader("X-API-Key")->value() == apiKey;
     }
 
-    if(request->hasParam("apiKey"))
+    if (request->hasParam("apikey"))
     {
-        return request->getParam("apiKey")->value() == apiKey;
+        return request->getParam("apikey")->value() == apiKey;
     }
 
     return false;
@@ -17,20 +17,29 @@ bool checkApiKey(AsyncWebServerRequest *request)
 
 int findDevice(String value)
 {
-    int id = value.toInt();
+    outputDebugLine("Find device value: " + value);
 
-    if(id > 0)
+    int id = value.toInt();
+    outputDebugLine("Find device id: " + String(id));
+
+    if (id > 0)
     {
         id--;
 
-        if(id >= 0 && id < DEVICE_COUNT)
+        if (id >= 0 && id < DEVICE_COUNT)
+        {
+            outputDebugLine("Valid device id found: " + String(id));
             return id;
+        }
     }
 
-    for(int i=0;i<DEVICE_COUNT;i++)
+    for (int i = 0; i < DEVICE_COUNT; i++)
     {
-        if(devices[i].name.equalsIgnoreCase(value))
+        if (devices[i].name.equalsIgnoreCase(value))
+        {
+            outputDebugLine("Device name found, id: " + String(i));
             return i;
+        }
     }
 
     return -1;

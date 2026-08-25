@@ -318,7 +318,7 @@ void setupWeb()
 
         if (idx < 0)
         {
-            doc["error"] = "Device disabled";
+            doc["error"] = "Device ID invalid";
             ArduinoJson::serializeJson(doc, json);
             request->send(404, "application/json", json);
             return;
