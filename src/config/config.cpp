@@ -10,9 +10,8 @@ String adminPassword = "";
 String wifiSSID = "";
 String wifiPassword = "";
 
-u_long lastStatusCheck = 0;
-bool rebootRequested = false;
-u_long rebootTime = 0;
+uint32_t lastStatusCheck = 0;
+esp_timer_handle_t rebootTimer;
 
 Preferences prefs;
 

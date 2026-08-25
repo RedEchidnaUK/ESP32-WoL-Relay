@@ -8,8 +8,20 @@
 // SETUP
 ////////////////////////////////////////////////////////////////////////////////
 
+void rebootCallback(void *arg)
+{
+    ESP.restart();
+}
+
 void setup()
 {
+    esp_timer_create_args_t timerArgs = {
+        .callback = &rebootCallback,
+        .arg = nullptr,
+        .dispatch_method = ESP_TIMER_TASK,
+        .name = "reboot"};
+    esp_timer_create(&timerArgs, &rebootTimer);
+
     Serial.begin(115200);
     outputDebugLine("Started");
 
@@ -67,10 +79,5 @@ void loop()
     {
         lastStatusCheck = millis();
         updateDeviceStatus();
-    }
-    if (rebootRequested && millis() >= rebootTime)
-    {
-        outputDebugLine("Rebooting...");
-        ESP.restart();
     }
 }

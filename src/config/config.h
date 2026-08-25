@@ -41,9 +41,8 @@ extern String wifiSSID;
 extern String wifiPassword;
 extern String adminUser;
 extern String adminPassword;
-extern u_long lastStatusCheck;
-extern u_long rebootTime;
-extern bool rebootRequested;
+extern uint32_t lastStatusCheck;
+extern esp_timer_handle_t rebootTimer;
 
 
 extern Preferences prefs;
