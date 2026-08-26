@@ -63,6 +63,7 @@ void setup()
         else
         {
             outputDebugLine("Failed to connect to WiFi");
+            outputDebugLine("Starting setup portal");
             startSetupPortal();
         }
     }
