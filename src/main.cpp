@@ -66,6 +66,39 @@ void setup()
     }
     listDir(LittleFS, "/", 3);
 
+          File fp = LittleFS.open("/server.crt");
+      if (fp) {
+        server_cert = fp.readString();
+        app_enable_ssl = true;
+      } else {
+        outputDebugLine("server.pem not found, SSL not available");
+        app_enable_ssl = false;
+      }
+      fp.close();
+
+      File fp2 = LittleFS.open("/server.key");
+      if (fp2) {
+        server_key = fp2.readString();
+        app_enable_ssl = true;
+      } else {
+        outputDebugLine("server.key not found, SSL not available");
+        app_enable_ssl = false;
+      }
+      fp2.close();
+
+      if (app_enable_ssl)
+      {
+        outputDebugLine("SSL enabled");
+        server = &httpsServer;
+        server->setCertificate(server_cert.c_str(), server_key.c_str());
+      }
+      else
+      {
+        outputDebugLine("SSL disabled");
+        server = &httpServer;
+      }
+
+
     outputDebugLine("Checking for preferences");
     prefs.begin("wolrelay", false);
     bool apiKeyExists = prefs.isKey("apiKey");

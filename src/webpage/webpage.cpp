@@ -43,10 +43,10 @@ bool isValidMACAddress(const String &mac)
 void startWebApp()
 {
     // Make sure the order for 'serveStatic' is most to least specific
-    server.serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
-    server.serveStatic("/", LittleFS, "/app/")->addMiddleware(&basicAuth);
+    server->serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
+    server->serveStatic("/", LittleFS, "/app/")->addMiddleware(&basicAuth);
 
-    server.on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
 
                 JsonDocument doc;
@@ -72,13 +72,13 @@ void startWebApp()
                 if (!sentAdminUser.isEmpty() && (sentAdminUser != adminUser))
                 {
                     adminUser = sentAdminUser;
-       basicAuth.setUsername(adminUser.c_str());
+                    basicAuth.setUsername(adminUser.c_str());
                     doc["admin"] = "Updated";
                 }
                 if (!sentAdminPassword.isEmpty() && (sentAdminPassword != adminPassword))
                 {
                     adminPassword = sentAdminPassword;
-    basicAuth.setPassword(adminPassword.c_str());
+                    basicAuth.setPassword(adminPassword.c_str());
                     doc["admin"] = "Updated";
                 }
 
@@ -104,6 +104,18 @@ void startWebApp()
                     String mac = request->getParam(("mac" + row).c_str(), "");
                     String ip = request->getParam(("ip" + row).c_str(), "");
                     String bc = request->getParam(("bc" + row).c_str(), "");
+                    bool en = request->hasParam(("en" + row).c_str());
+
+                    outputDebug("name : ");
+                    outputDebugLine(name);
+                    outputDebug("mac: ");
+                    outputDebugLine(mac);
+                    outputDebug("ip: ");
+                    outputDebugLine(ip);
+                    outputDebug("bc: ");
+                    outputDebugLine(bc);
+                    outputDebug("en: ");
+                    outputDebugLine(en);
 
                     if ((!isValidMACAddress(mac) || !isValidIPAddress(ip) || !isValidIPAddress(bc)) && !(mac.isEmpty() && ip.isEmpty() && bc.isEmpty()))
                     {
@@ -122,7 +134,7 @@ void startWebApp()
                     device.mac = mac;
                     device.ip = ip;
                     device.broadcast = bc;
-                    device.enabled = request->getParam(("en" + row).c_str(), "");
+                    device.enabled = en;
 
                     saved++;
                 }
@@ -130,7 +142,7 @@ void startWebApp()
                 doc["saved"] = saved;
 
                 String json;
-                ArduinoJson::serializeJson(doc, json);
+                serializeJson(doc, json);
 
                 saveConfig();
 
@@ -138,21 +150,21 @@ void startWebApp()
 
     // GET DEVICE STATUS
 
-    server.on("/api/device", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/device", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
         if (!checkApiKey(request))
         {
             doc["error"] = "Invalid credentials";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(401, "application/json", json.c_str());
         }
 
         if (!request->hasParam("id"))
         {
             doc["error"] = "Device ID not specified";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(400, "application/json", json.c_str());
         }
 
@@ -163,14 +175,14 @@ void startWebApp()
         if (idx < 0)
         {
             doc["error"] = "Device ID invalid";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(404, "application/json", json.c_str());
         }
 
         if (!devices[idx].enabled)
         {
             doc["error"] = "Device disabled";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(410, "application/json", json.c_str());
         }
 
@@ -179,20 +191,20 @@ void startWebApp()
         doc["enabled"] = devices[idx].enabled;
         doc["online"] = devices[idx].online;
 
-        ArduinoJson::serializeJson(doc, json);
+        serializeJson(doc, json);
 
         return response->send(200, "application/json", json.c_str()); });
 
     // GET ALL DEVICES
 
-    server.on("/api/devices", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/devices", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
         if (!checkApiKey(request))
         {
             doc["error"] = "Invalid credentials";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(401, "application/json", json.c_str());
         }
 
@@ -210,13 +222,13 @@ void startWebApp()
             o["online"] = devices[i].online;
         }
 
-        ArduinoJson::serializeJson(doc, json);
+        serializeJson(doc, json);
 
         return response->send(200, "application/json", json.c_str()); });
 
     // // GET CONFIG
 
-    server.on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
 
         JsonDocument doc;
@@ -240,12 +252,12 @@ void startWebApp()
         }
 
         String json;
-        ArduinoJson::serializeJson(doc, json);
+        serializeJson(doc, json);
 
         return response->send(200, "application/json", json.c_str()); })
         ->addMiddleware(&basicAuth);
 
-    server.on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
 
         JsonDocument doc;
@@ -253,21 +265,21 @@ void startWebApp()
         doc["apiKey"] = generateApiKey();
 
         String json;
-        ArduinoJson::serializeJson(doc, json);
+        serializeJson(doc, json);
 
         return response->send(200, "application/json", json.c_str()); })
         ->addMiddleware(&basicAuth);
 
     // POST WAKE
 
-    server.on("/api/wake", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/wake", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
         if (!checkApiKey(request))
         {
             doc["error"] = "Invalid credentials";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(401, "application/json", json.c_str());
 
         }
@@ -275,7 +287,7 @@ void startWebApp()
         if (!request->hasParam("id"))
         {
             doc["error"] = "Device ID not specified";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(400, "application/json", json.c_str());
 
         }
@@ -285,7 +297,7 @@ void startWebApp()
         if (idx < 0)
         {
             doc["error"] = "Device ID invalid";
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(404, "application/json", json.c_str());
 
         }
@@ -297,7 +309,7 @@ void startWebApp()
             doc["error"] = "Device disabled";
 
             String json;
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
             return response->send(410, "application/json", json.c_str());
 
         }
@@ -309,7 +321,7 @@ void startWebApp()
             doc["id"] = idx + 1;
             doc["name"] = devices[idx].name;
 
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
 
             return response->send(200, "application/json", json.c_str());
         }
@@ -319,12 +331,12 @@ void startWebApp()
             doc["id"] = idx + 1;
             doc["name"] = devices[idx].name;
 
-            ArduinoJson::serializeJson(doc, json);
+            serializeJson(doc, json);
 
             return response->send(500, "application/json", json.c_str());
         } });
 
-    server.begin();
+    server->begin();
 }
 
 void startSetupPortal()
@@ -333,10 +345,10 @@ void startSetupPortal()
     WiFi.softAP("ESP32 WoL Relay");
 
     // Make sure the order for 'serveStatic' is most to least specific
-    server.serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
-    server.serveStatic("/", LittleFS, "/setup/")->addMiddleware(&basicAuth);
+    server->serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
+    server->serveStatic("/", LittleFS, "/setup/")->addMiddleware(&basicAuth);
 
-    server.on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
                 JsonDocument doc;
 
@@ -345,11 +357,11 @@ void startSetupPortal()
                 doc["apiKey"] = apiKey;
 
                 String json;
-                ArduinoJson::serializeJson(doc, json);
+                serializeJson(doc, json);
 
                 return response->send(200, "application/json", json.c_str()); });
 
-    server.on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
                   wifiSSID = request->getParam("wifiSSID", "");
                   wifiPassword = request->getParam("wifiPassword", "");
@@ -413,7 +425,7 @@ void startSetupPortal()
                           doc["result"] = "Unknown error!";
                           break;
                       }
-                      ArduinoJson::serializeJson(doc, json);
+                      serializeJson(doc, json);
                       return response->send(400, "application/json", json.c_str());
                   }
 
@@ -427,22 +439,22 @@ void startSetupPortal()
                   saveConfig();
 
                   doc["result"] = "Success!";
-                  ArduinoJson::serializeJson(doc, json);
+                  serializeJson(doc, json);
                   outputDebugLine("Starting reboot timer");
 
                   esp_timer_start_once(rebootTimer, 5500000);
                   return response->send(200, "application/json", json.c_str()); });
 
-    server.on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
+    server->on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
 
         doc["apiKey"] = generateApiKey();
 
         String json;
-        ArduinoJson::serializeJson(doc, json);
+        serializeJson(doc, json);
 
         return response->send(200, "application/json", json.c_str()); });
 
-    server.begin();
+    server->begin();
 }

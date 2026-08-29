@@ -4,6 +4,7 @@
 #include <Preferences.h>
 // #include <ESPAsyncWebServer.h>
 #include <PsychicHttp.h>
+#include <PsychicHttpsServer.h>
 #include <WiFi.h>
 #include <ESP32Ping.h>
 #include <ArduinoJson.h>
@@ -42,11 +43,18 @@ extern String wifiSSID;
 extern String wifiPassword;
 extern String adminUser;
 extern String adminPassword;
+extern String server_cert;
+extern String server_key;
+
 extern uint32_t lastStatusCheck;
+
 extern esp_timer_handle_t rebootTimer;
 
+extern bool app_enable_ssl;
 
 extern Preferences prefs;
-// extern AsyncWebServer server;
-extern PsychicHttpServer server;
+
+extern PsychicHttpServer httpServer;
+extern PsychicHttpsServer httpsServer;
+extern PsychicHttpServer* server;
 extern AuthenticationMiddleware basicAuth;
