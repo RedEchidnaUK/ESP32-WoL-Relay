@@ -1,10 +1,8 @@
 #include "webpage.h"
 
-bool authenticateWeb(AsyncWebServerRequest *request)
+bool authenticateWeb(PsychicRequest *request)
 {
-    return request->authenticate(
-        adminUser.c_str(),
-        adminPassword.c_str());
+    return request->authenticate(adminUser.c_str(), adminPassword.c_str());
 }
 
 bool isValidIPAddress(const String &ip)
@@ -42,44 +40,20 @@ bool isValidMACAddress(const String &mac)
 // WEB SERVER
 ////////////////////////////////////////////////////////////////////////////////
 
-void setupWeb()
+void startWebApp()
 {
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+    // Make sure the order for 'serveStatic' is most to least specific
+    server.serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
+    server.serveStatic("/", LittleFS, "/app/")->addMiddleware(&basicAuth);
+
+    server.on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
-            if (!authenticateWeb(request))
-            {
-            return request->requestAuthentication();
-            }
-            request->send(LittleFS, "/index.html", String()); });
-
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-              { 
-                if (!authenticateWeb(request))
-                {
-                return request->requestAuthentication();
-                }    
-                request->send(LittleFS, "/style.css", "text/css"); });
-
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              { 
-                if (!authenticateWeb(request))
-                {
-                    return request->requestAuthentication();
-                }
-                request->send(LittleFS, "/script.js", "application/javascript"); });
-
-    server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
-              {
-                if (!authenticateWeb(request))
-                {
-                    return request->requestAuthentication();
-                }
 
                 JsonDocument doc;
                 JsonArray errors = doc["errors"].to<JsonArray>();
 
-                String sentWifiSSID = request->arg("wifiSSID");
-                String sentWifiPassword = request->arg("wifiPassword");
+                String sentWifiSSID = request->getParam("wifiSSID", "");
+                String sentWifiPassword = request->getParam("wifiPassword", "");
 
                 if (!sentWifiSSID.isEmpty() && (sentWifiSSID != wifiSSID))
                 {
@@ -92,21 +66,24 @@ void setupWeb()
                     doc["wifi"] = "Updated";
                 }
 
-                String sentAdminUser = request->arg("adminUser");
-                String sentAdminPassword = request->arg("adminPassword");
-                
+                String sentAdminUser = request->getParam("adminUser", "");
+                String sentAdminPassword = request->getParam("adminPassword", "");
+
                 if (!sentAdminUser.isEmpty() && (sentAdminUser != adminUser))
                 {
                     adminUser = sentAdminUser;
+       basicAuth.setUsername(adminUser.c_str());
                     doc["admin"] = "Updated";
                 }
                 if (!sentAdminPassword.isEmpty() && (sentAdminPassword != adminPassword))
                 {
                     adminPassword = sentAdminPassword;
+    basicAuth.setPassword(adminPassword.c_str());
                     doc["admin"] = "Updated";
                 }
 
-                String sentApiKey = request->arg("apiKey");
+                // String sentApiKey = request->arg("apiKey");
+                String sentApiKey = request->getParam("apiKey", "");
 
                 if (!sentApiKey.isEmpty() && (sentApiKey != apiKey))
                 {
@@ -120,13 +97,13 @@ void setupWeb()
                 {
                     outputDebug("Processing row: ");
                     outputDebugLine(i);
-                    
+
                     String row = String(i);
 
-                    String name = request->arg("name" + row);
-                    String mac = request->arg("mac" + row);
-                    String ip = request->arg("ip" + row);
-                    String bc = request->arg("bc" + row);
+                    String name = request->getParam(("name" + row).c_str(), "");
+                    String mac = request->getParam(("mac" + row).c_str(), "");
+                    String ip = request->getParam(("ip" + row).c_str(), "");
+                    String bc = request->getParam(("bc" + row).c_str(), "");
 
                     if ((!isValidMACAddress(mac) || !isValidIPAddress(ip) || !isValidIPAddress(bc)) && !(mac.isEmpty() && ip.isEmpty() && bc.isEmpty()))
                     {
@@ -145,7 +122,7 @@ void setupWeb()
                     device.mac = mac;
                     device.ip = ip;
                     device.broadcast = bc;
-                    device.enabled = request->hasArg("en" + row);
+                    device.enabled = request->getParam(("en" + row).c_str(), "");
 
                     saved++;
                 }
@@ -157,11 +134,11 @@ void setupWeb()
 
                 saveConfig();
 
-                request->send(200, "application/json", json); });
+                return response->send(200, "application/json", json.c_str()); });
 
     // GET DEVICE STATUS
 
-    server.on("/api/device", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/device", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
@@ -169,16 +146,14 @@ void setupWeb()
         {
             doc["error"] = "Invalid credentials";
             ArduinoJson::serializeJson(doc, json);
-            request->send(401, "application/json", json);
-            return;
+            return response->send(401, "application/json", json.c_str());
         }
 
         if (!request->hasParam("id"))
         {
             doc["error"] = "Device ID not specified";
             ArduinoJson::serializeJson(doc, json);
-            request->send(400, "application/json", json);
-            return;
+            return response->send(400, "application/json", json.c_str());
         }
 
         String dev = request->getParam("id")->value();
@@ -189,16 +164,14 @@ void setupWeb()
         {
             doc["error"] = "Device ID invalid";
             ArduinoJson::serializeJson(doc, json);
-            request->send(404, "application/json", json);
-            return;
+            return response->send(404, "application/json", json.c_str());
         }
 
         if (!devices[idx].enabled)
         {
             doc["error"] = "Device disabled";
             ArduinoJson::serializeJson(doc, json);
-            request->send(410, "application/json", json);
-            return;
+            return response->send(410, "application/json", json.c_str());
         }
 
         doc["id"] = idx + 1;
@@ -208,11 +181,11 @@ void setupWeb()
 
         ArduinoJson::serializeJson(doc, json);
 
-        request->send(200, "application/json", json); });
+        return response->send(200, "application/json", json.c_str()); });
 
     // GET ALL DEVICES
 
-    server.on("/api/devices", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/devices", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
@@ -220,8 +193,7 @@ void setupWeb()
         {
             doc["error"] = "Invalid credentials";
             ArduinoJson::serializeJson(doc, json);
-            request->send(401, "application/json", json);
-            return;
+            return response->send(401, "application/json", json.c_str());
         }
 
         JsonArray arr = doc.to<JsonArray>();
@@ -240,16 +212,12 @@ void setupWeb()
 
         ArduinoJson::serializeJson(doc, json);
 
-        request->send(200, "application/json", json); });
+        return response->send(200, "application/json", json.c_str()); });
 
-    // GET CONFIG
+    // // GET CONFIG
 
-    server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
-        if (!authenticateWeb(request))
-        {
-            return request->requestAuthentication();
-        }
 
         JsonDocument doc;
 
@@ -274,14 +242,11 @@ void setupWeb()
         String json;
         ArduinoJson::serializeJson(doc, json);
 
-        request->send(200, "application/json", json); });
+        return response->send(200, "application/json", json.c_str()); })
+        ->addMiddleware(&basicAuth);
 
-    server.on("/api/apikey", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
-        if (!authenticateWeb(request))
-        {
-            return request->requestAuthentication();
-        }
 
         JsonDocument doc;
 
@@ -290,11 +255,12 @@ void setupWeb()
         String json;
         ArduinoJson::serializeJson(doc, json);
 
-        request->send(200, "application/json", json); });
+        return response->send(200, "application/json", json.c_str()); })
+        ->addMiddleware(&basicAuth);
 
     // POST WAKE
 
-    server.on("/api/wake", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/api/wake", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
         String json;
@@ -302,16 +268,16 @@ void setupWeb()
         {
             doc["error"] = "Invalid credentials";
             ArduinoJson::serializeJson(doc, json);
-            request->send(401, "application/json", json);
-            return;
+            return response->send(401, "application/json", json.c_str());
+
         }
 
         if (!request->hasParam("id"))
         {
             doc["error"] = "Device ID not specified";
             ArduinoJson::serializeJson(doc, json);
-            request->send(400, "application/json", json);
-            return;
+            return response->send(400, "application/json", json.c_str());
+
         }
 
         int idx = findDevice(request->getParam("id")->value());
@@ -320,8 +286,8 @@ void setupWeb()
         {
             doc["error"] = "Device ID invalid";
             ArduinoJson::serializeJson(doc, json);
-            request->send(404, "application/json", json);
-            return;
+            return response->send(404, "application/json", json.c_str());
+
         }
 
         if (!devices[idx].enabled)
@@ -332,8 +298,8 @@ void setupWeb()
 
             String json;
             ArduinoJson::serializeJson(doc, json);
-            request->send(410, "application/json", json);
-            return;
+            return response->send(410, "application/json", json.c_str());
+
         }
 
         if (sendWOL(idx))
@@ -345,7 +311,7 @@ void setupWeb()
 
             ArduinoJson::serializeJson(doc, json);
 
-            request->send(200, "application/json", json);
+            return response->send(200, "application/json", json.c_str());
         }
         else
         {
@@ -355,7 +321,7 @@ void setupWeb()
 
             ArduinoJson::serializeJson(doc, json);
 
-            request->send(500, "application/json", json);
+            return response->send(500, "application/json", json.c_str());
         } });
 
     server.begin();
@@ -366,16 +332,11 @@ void startSetupPortal()
     WiFi.mode(WIFI_AP);
     WiFi.softAP("ESP32 WoL Relay");
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/setup.html", String()); });
+    // Make sure the order for 'serveStatic' is most to least specific
+    server.serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
+    server.serveStatic("/", LittleFS, "/setup/")->addMiddleware(&basicAuth);
 
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/style.css", "text/css"); });
-
-    server.on("/setup.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/setup.js", "application/javascript"); });
-
-    server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
                 JsonDocument doc;
 
@@ -386,15 +347,15 @@ void startSetupPortal()
                 String json;
                 ArduinoJson::serializeJson(doc, json);
 
-                request->send(200, "application/json", json); });
+                return response->send(200, "application/json", json.c_str()); });
 
-    server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
               {
-                  wifiSSID = request->arg("wifiSSID");
-                  wifiPassword = request->arg("wifiPassword");
-                  adminUser = request->arg("adminUser");
-                  adminPassword = request->arg("adminPassword");
-                  apiKey = request->arg("apiKey");
+                  wifiSSID = request->getParam("wifiSSID", "");
+                  wifiPassword = request->getParam("wifiPassword", "");
+                  adminUser = request->getParam("adminUser", "");
+                  adminPassword = request->getParam("adminPassword", "");
+                  apiKey = request->getParam("apiKey", "");
 
                   int errorCode = 0;
 
@@ -453,8 +414,7 @@ void startSetupPortal()
                           break;
                       }
                       ArduinoJson::serializeJson(doc, json);
-                      request->send(400, "application/json", json);
-                      return;
+                      return response->send(400, "application/json", json.c_str());
                   }
 
                   outputDebugLine("Saving config");
@@ -471,9 +431,9 @@ void startSetupPortal()
                   outputDebugLine("Starting reboot timer");
 
                   esp_timer_start_once(rebootTimer, 5500000);
-                  request->send(200, "application/json", json); });
+                  return response->send(200, "application/json", json.c_str()); });
 
-    server.on("/api/apikey", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
               {
         JsonDocument doc;
 
@@ -482,7 +442,7 @@ void startSetupPortal()
         String json;
         ArduinoJson::serializeJson(doc, json);
 
-        request->send(200, "application/json", json); });
+        return response->send(200, "application/json", json.c_str()); });
 
     server.begin();
 }

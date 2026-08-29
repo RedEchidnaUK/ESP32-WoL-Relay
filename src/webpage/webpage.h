@@ -5,6 +5,6 @@
 #include "../api/api.h"
 #include "../network/network.h"
 
-void setupWeb();
+void startWebApp();
 void startSetupPortal();
-bool authenticateWeb(AsyncWebServerRequest *request);
+bool authenticateWeb(PsychicRequest *request);

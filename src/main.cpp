@@ -13,6 +13,37 @@ void rebootCallback(void *arg)
     ESP.restart();
 }
 
+void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
+  Serial.printf("Listing directory: %s\r\n", dirname);
+
+  File root = fs.open(dirname);
+  if (!root) {
+    Serial.println("- failed to open directory");
+    return;
+  }
+  if (!root.isDirectory()) {
+    Serial.println(" - not a directory");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.print("  DIR : ");
+      Serial.println(file.name());
+      if (levels) {
+        listDir(fs, file.path(), levels - 1);
+      }
+    } else {
+      Serial.print("  FILE: ");
+      Serial.print(file.name());
+      Serial.print("\tSIZE: ");
+      Serial.println(file.size());
+    }
+    file = root.openNextFile();
+  }
+}
+
 void setup()
 {
     esp_timer_create_args_t timerArgs = {
@@ -33,6 +64,7 @@ void setup()
         outputDebugLine("An Error has occurred while mounting LittleFS");
         return;
     }
+    listDir(LittleFS, "/", 3);
 
     outputDebugLine("Checking for preferences");
     prefs.begin("wolrelay", false);
@@ -51,14 +83,25 @@ void setup()
     }
     else
     {
+        prefs.begin("wolrelay", false);
+        prefs.isKey("apiKey");
+        prefs.end();
+
+
         outputDebugLine("Preferences found, loading config");
         loadConfig();
+        basicAuth.setUsername("admin");
+        basicAuth.setPassword(adminPassword.c_str());
+        basicAuth.setAuthMethod(BASIC_AUTH);
+        basicAuth.setRealm("ESP32 WoL Relay authenticaiton");
+        basicAuth.setAuthFailureMessage("Error: Authentication required");
+
         if (connectWifi() == WL_CONNECTED)
         {
             outputDebugLine("Connected to WiFi");
             outputDebugLine(WiFi.localIP());
             updateDeviceStatus();
-            setupWeb();
+            startWebApp();
         }
         else
         {

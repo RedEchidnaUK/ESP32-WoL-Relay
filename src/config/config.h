@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
-#include <ESPAsyncWebServer.h>
+// #include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 #include <WiFi.h>
 #include <ESP32Ping.h>
 #include <ArduinoJson.h>
@@ -46,4 +47,6 @@ extern esp_timer_handle_t rebootTimer;
 
 
 extern Preferences prefs;
-extern AsyncWebServer server;
+// extern AsyncWebServer server;
+extern PsychicHttpServer server;
+extern AuthenticationMiddleware basicAuth;

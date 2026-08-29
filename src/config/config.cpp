@@ -15,4 +15,6 @@ esp_timer_handle_t rebootTimer;
 
 Preferences prefs;
 
-AsyncWebServer server(80);
+// AsyncWebServer server(80);
+PsychicHttpServer server(80);
+AuthenticationMiddleware basicAuth;
