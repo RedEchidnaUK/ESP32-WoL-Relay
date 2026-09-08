@@ -17,6 +17,21 @@ void saveConfig()
     prefs.putString("wifiSSID", wifiSSID);
     outputDebugLine("Saving wifiPassword");
     prefs.putString("wifiPassword", wifiPassword);
+    outputDebugLine("Saving https");
+    prefs.putBool("https", https);
+
+    outputDebugLine("Saving certificates");
+    LittleFS.remove("/server.crt");
+    File fp = LittleFS.open("/server.crt", FILE_WRITE, true);
+    outputDebugLine("Saving server.crt");
+    fp.write((const uint8_t *)server_cert.c_str(), server_cert.length());
+    fp.close();
+
+    LittleFS.remove("/server.key");
+    File fp2 = LittleFS.open("/server.key", FILE_WRITE, true);
+    outputDebugLine("Saving server.key");
+    fp2.write((const uint8_t *)server_key.c_str(), server_key.length());
+    fp2.close();
 
     outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)
@@ -71,6 +86,35 @@ void loadConfig()
     outputDebugLine("Admin user: " + adminUser);
     adminPassword = prefs.getString("adminPassword");
     outputDebugLine("Admin Password: " + adminPassword);
+
+    https = prefs.getBool("https");
+    outputDebug("HTTPS enabled: ");
+    outputDebugLine(https ? "True" : "False");
+
+    File fp = LittleFS.open("/server.crt");
+    if (fp)
+    {
+        outputDebugLine("server.crt found");
+        server_cert = fp.readString();
+    }
+    else
+    {
+        outputDebugLine("server.crt not found, SSL not available");
+        server_cert = "";
+    }
+    fp.close();
+
+    File fp2 = LittleFS.open("/server.key");
+    if (fp2)
+    {
+        server_key = fp2.readString();
+        outputDebugLine("server.key found");
+    }
+    else
+    {
+        outputDebugLine("server.key not found, SSL not available");
+        server_key = "";
+    }
 
     prefs.end();
 }

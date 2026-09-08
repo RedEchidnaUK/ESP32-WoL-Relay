@@ -16,6 +16,7 @@
 #define LED 2
 #define DEVICE_COUNT 10
 #define DEBUG 1
+#define TLSLOGS 0
 #define STATUS_CHECK_INTERVAL 30000
 
 #if DEBUG==1
@@ -51,6 +52,7 @@ extern uint32_t lastStatusCheck;
 extern esp_timer_handle_t rebootTimer;
 
 extern bool app_enable_ssl;
+extern bool https;
 
 extern Preferences prefs;
 

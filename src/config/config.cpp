@@ -17,6 +17,7 @@ esp_timer_handle_t rebootTimer;
 Preferences prefs;
 
 bool app_enable_ssl = false;
+bool https = false;
 
 PsychicHttpServer httpServer;
 PsychicHttpsServer httpsServer;

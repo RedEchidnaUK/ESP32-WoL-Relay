@@ -16,8 +16,19 @@ async function loadConfig() {
         const config = await response.json();
 
         buildDeviceTable(config.devices);
+
         document.getElementById("adminUser").value = config.adminUser || "";
         document.getElementById("wifiSSID").value = config.wifissid || "";
+        document.getElementById("certificate").value = config.certificate || "";
+        document.getElementById("certificateKey").value = config.certificateKey || "";
+
+        if (config.httpsEnabled) {
+            document.getElementById("certificate").disabled = false;
+            document.getElementById("certificate").required = true;
+            document.getElementById("certificateKey").disabled = false;
+            document.getElementById("certificateKey").required = true;
+            document.getElementById("httpsEnabled").checked = true;
+        }
     }
     catch (error) {
         console.error(error);
@@ -33,6 +44,152 @@ async function generateAPIKey() {
     }
     catch (error) {
         console.error(error);
+    }
+}
+
+async function saveSection(containerId) {
+    const container = document.getElementById(containerId);
+    let valid = true;
+    let alertTextAdditional = "";
+    const data = {};
+
+    data["tab"] = containerId;
+
+    switch (containerId) {
+        case "devices":
+            let table = container.querySelector('#deviceTable');
+            let rows = table.querySelectorAll('tr');
+            const dataRows = [];
+
+            rows.forEach((row, index) => {
+                let device = {};
+
+                if (row.querySelector('input[type="checkbox"]').checked) {
+                    let rowValid = true;
+                    row.querySelectorAll('input, textarea').forEach(control => {
+                        if (!checkInput(control.id)) {
+
+                            if (rowValid) {
+                                alertTextAdditional += `<p class="error">Device ${index + 1}: At least one field is invalid.</p>`;
+                            }
+                            valid = false;
+                            rowValid = false;
+                        }
+                        let value =
+                            control.type === 'checkbox'
+                                ? control.checked
+                                : control.name === 'name'
+                                    ? control.value.trim()
+                                    : control.value.toUpperCase();
+
+                        device[control.name.replace(/\d+$/, '')] = value;
+                    });
+                    dataRows.push(device);
+                }
+                else {
+                    row.querySelectorAll('input, textarea').forEach(control => {
+                        let value =
+                            control.type === 'checkbox'
+                                ? control.checked
+                                : control.name === 'name'
+                                    ? control.value.trim()
+                                    : control.value.toUpperCase();
+
+                        device[control.name.replace(/\d+$/, '')] = value;
+                    });
+                    dataRows.push(device);
+                }
+            });
+            data["devices"] = dataRows;
+            break;
+        case "https":
+            if (document.getElementById("httpsEnabled").checked) {
+                data["httpsEnabled"] = true;
+                container.querySelectorAll(".certArea textarea").forEach(field => {
+
+                    const value = field.value.trim();
+                    const isKey = field.id.toLowerCase().includes("key");
+                    const isValid = value !== "" && checkCertificateField(field, isKey);
+
+                    if (isValid) {
+                        data[field.id] = value;
+                    }
+                    else {
+                        field.parentElement.classList.toggle("error", !isValid);
+                        if (isKey) {
+                            alertTextAdditional += `<p class="error">Private Key is invalid. It must be a valid PEM private key.</p>`;
+                        } else {
+                            alertTextAdditional += `<p class="error">Certificate is invalid. It must be a valid PEM certificate.</p>`;
+                        }
+                        valid = false;
+                    }
+                });
+            }
+            else {
+                data["httpsEnabled"] = false;
+            }
+            break;
+        default:
+            container.querySelectorAll('input').forEach(element => {
+                data[element.name] =
+                    element.type === 'checkbox'
+                        ? element.checked
+                        : element.value;
+                if (!checkInput(element.id)) {
+                    valid = false;
+                    element.parentElement.classList.toggle('error', !valid);
+                }
+            });
+    }
+
+    if (!valid) {
+        alertbox(`<p class="error">Please check all required fields.</p>${alertTextAdditional}`);
+        return;
+    }
+    else {
+        console.log(JSON.stringify(data))
+    }
+
+    const tab = document.querySelector(`button[onclick="opensetting('${containerId}')"]`);
+    const tabName = tab?.textContent.trim();
+
+    const response = await fetch('/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const json = await response.json();
+    console.log(json);
+
+    if (response.status == 200) {
+        let alertText = "";
+        if (containerId === "devices" && json.errors && json.errors.length > 0) {
+
+            if (json.saved > 0) {
+                alertText += `<p class="success">Device Settings: Saved ${json.saved} device(s)<br>`;
+            }
+            else {
+                alertText += `<p class="error">Device Settings: Saved ${json.saved} device(s)<br>`;
+            }
+
+            if (json.errors.length > 0) {
+                alertText += `<p class="error">` +
+                    json.errors
+                        .map(e => `Device ${e.row}: Skipped - Invalid configuration`)
+                        .join("<br>") + `</p>`;
+            }
+            else {
+                alertText = `<p>${tabName}: ${json.result}</p>`;
+            }
+            alertbox(alertText);
+        }
+        else {
+            alertbox(`<p class="success">${tabName}: ${json.result}</p>`);
+        }
+    }
+    else {
+        alertbox(`<p class="error">${tabName}: ${json.result}</p>`);
     }
 }
 
@@ -57,7 +214,8 @@ function buildDeviceTable(devices) {
                         type="text"
                         name="name${device.id - 1}"
                         id="name${device.id - 1}"
-                        value="${device.name || ''}">
+                        value="${device.name || ''}" 
+                        maxlength="32">
                 </div>
             </td>
 
@@ -68,7 +226,7 @@ function buildDeviceTable(devices) {
                         name="mac${device.id - 1}"
                         id="mac${device.id - 1}"
                         value="${device.mac || ''}"
-                        required="true">
+                        required="true" maxlength="17">
                 </div>
             </td>
 
@@ -79,7 +237,7 @@ function buildDeviceTable(devices) {
                         name="ip${device.id - 1}"
                         id="ip${device.id - 1}"
                         value="${device.ip || ''}"
-                        required="true">
+                        required="true" maxlength="15">
                 </div>
             </td>
 
@@ -90,7 +248,7 @@ function buildDeviceTable(devices) {
                         name="bc${device.id - 1}"
                         id="bc${device.id - 1}"
                         value="${device.broadcast || ''}"
-                        required="true">
+                        required="true" maxlength="15">
                 </div>
             </td>
 
@@ -152,12 +310,19 @@ const checkInput = (id) => {
     if (/^(ip|bc)\d+$/.test(id)) {
         valid = isIPAddresslValid(input.value.trim());
     }
-    if (/^(mac)\d+$/.test(id)) {
+    else if (/^(mac)\d+$/.test(id)) {
         valid = isMACAddresslValid(input.value.trim());
     }
+    else if (input.required && input.value.trim() !== "") {
+        valid = true;
+    }
+    else if (!input.required) {
+        valid = true;
 
-    input.parentElement.classList.toggle('error', !valid);
-    input.parentElement.classList.toggle('success', valid);
+    }
+    // input.parentElement.classList.toggle('error', !valid);
+    // input.parentElement.classList.toggle('success', valid);
+    return valid;
 }
 
 function updateRowEnabled(rowNumber) {
@@ -176,9 +341,9 @@ function updateRowEnabled(rowNumber) {
     });
 
     if (enabled) {
-        checkInput(fields.mac.id);
-        checkInput(fields.ip.id);
-        checkInput(fields.bc.id);
+        [fields.ip, fields.mac, fields.bc].forEach(field =>
+            checkInput(field.id) ? field.parentElement.classList.add('success') : field.parentElement.classList.add('error')
+        );
     } else {
         [fields.ip, fields.mac, fields.bc].forEach(field =>
             field.parentElement.classList.remove('error', 'success')
@@ -186,15 +351,14 @@ function updateRowEnabled(rowNumber) {
     }
 }
 
-
 function alertbox(html) {
     alert_Message_container.innerHTML = html;
     alertBox.style.display = "block";
 }
 
 function opensetting(settingName) {
-    var i;
-    var x = document.getElementsByClassName("setting-item-show");
+    let i;
+    let x = document.getElementsByClassName("setting-item-show");
     for (i = 0; i < x.length; i++) {
         x[i].classList.add("setting-item-hide");
         x[i].classList.remove("setting-item-show");
@@ -203,65 +367,68 @@ function opensetting(settingName) {
     document.getElementById(settingName).classList.remove('setting-item-hide');
 }
 
+function enableHTTPS() {
+    let certField = document.getElementById("certificate");
+    let certKeyField = document.getElementById("certificateKey");
+    certField.disabled = !certField.disabled;
+    certKeyField.disabled = !certKeyField.disabled;
+    certField.required = !certField.disabled;
+    certKeyField.required = !certKeyField.disabled;
+    certField.parentElement.classList.remove('error', 'success');
+    certKeyField.parentElement.classList.remove('error', 'success');
+
+    if (!certField.disabled && (certField.value.trim() === "" || checkCertificateField(certField) === false)) {
+        certField.parentElement.classList.add('error');
+    }
+    if (!certKeyField.disabled && (certKeyField.value.trim() === "" || checkCertificateField(certKeyField, true) === false)) {
+        certKeyField.parentElement.classList.add('error');
+    }
+}
+
+function checkCertificateField(element, key = false) {
+
+    if (!element.disabled) {
+        let lines = element.value.split('\n');
+        let firstLine = lines[0];
+        let lastLine = lines[lines.length - 1];
+
+        if (firstLine === "-----BEGIN CERTIFICATE-----" && lastLine === "-----END CERTIFICATE-----" && key === false) {
+            // element.parentElement.classList.add("success");
+            // element.parentElement.classList.remove("error");
+            return true;
+        }
+        else if (firstLine === "-----BEGIN PRIVATE KEY-----" && lastLine === "-----END PRIVATE KEY-----" && key === true) {
+            // element.parentElement.classList.add("success");
+            // element.parentElement.classList.remove("error");
+            return true;
+        }
+        else {
+            // element.parentElement.classList.add("error");
+            // element.parentElement.classList.remove("success");
+            return false;
+        }
+    }
+}
+
 // 
 // Event listeners
 // 
 
-window.addEventListener(
-    "load",
-    loadConfig
-);
+window.addEventListener("load", loadConfig);
 
-close_img.addEventListener
-    ('click', function () {
-        alertBox.style.display = "none";
-    });
+close_img.addEventListener('click', function () { alertBox.style.display = "none"; });
 
-document.getElementById("save").addEventListener('input', debounce(function (e) {
-    const id = e.target.id;
-    if (/^(mac|ip|bc)\d+$/.test(id)) {
-        checkInput(id);
+document.getElementById("save").addEventListener("input", debounce(e => {
+    const field = e.target;
+    let valid = false
+    if (field.closest(".certArea")) {
+        valid = checkCertificateField(field, field.id === "certificateKey");
+        field.parentElement.classList.toggle('error', !valid);
+        field.parentElement.classList.toggle('success', valid);
+    }
+    else {
+        valid = checkInput(field.id);
+        field.parentElement.classList.toggle('error', !valid);
+        field.parentElement.classList.toggle('success', valid);
     }
 }));
-
-document.getElementById("save").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    console.log(formData);
-
-    const response = await fetch("/save", {
-        method: "POST",
-        body: formData
-    });
-
-    const result = await response.json();
-
-    document
-        .querySelectorAll(".server-error")
-        .forEach(el => el.classList.remove("server-error"));
-
-    console.log(result);
-
-    let alertText = ""
-
-    if (result.wifi) {
-        alertText = alertText + `WiFi Settings: ${result.wifi}<br>`
-    }
-
-    if (result.admin) {
-        alertText = alertText + `Admin Settings: ${result.admin}<br>`
-    }
-
-    if (result.api) {
-        alertText = alertText + `API Settings: ${result.api}<br>`
-    }
-
-    alertText = alertText + `Device Settings: <br>` +
-        `Saved ${result.saved} device(s)<br>` +
-        result.errors
-            .map(e => `Row ${e.row}: ${e.message}`)
-            .join("<br>")
-
-    alertbox(alertText);
-});

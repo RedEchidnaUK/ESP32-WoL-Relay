@@ -2,7 +2,7 @@
 #include "./storage/storage.h"
 #include "./network/network.h"
 #include "./api/api.h"
-#include "./webpage/webpage.h"
+#include "./webserver/webserver.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // SETUP
@@ -13,39 +13,52 @@ void rebootCallback(void *arg)
     ESP.restart();
 }
 
-void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
-  Serial.printf("Listing directory: %s\r\n", dirname);
+void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
+{
+    Serial.printf("Listing directory: %s\r\n", dirname);
 
-  File root = fs.open(dirname);
-  if (!root) {
-    Serial.println("- failed to open directory");
-    return;
-  }
-  if (!root.isDirectory()) {
-    Serial.println(" - not a directory");
-    return;
-  }
-
-  File file = root.openNextFile();
-  while (file) {
-    if (file.isDirectory()) {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
-      if (levels) {
-        listDir(fs, file.path(), levels - 1);
-      }
-    } else {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("\tSIZE: ");
-      Serial.println(file.size());
+    File root = fs.open(dirname);
+    if (!root)
+    {
+        Serial.println("- failed to open directory");
+        return;
     }
-    file = root.openNextFile();
-  }
+    if (!root.isDirectory())
+    {
+        Serial.println(" - not a directory");
+        return;
+    }
+
+    File file = root.openNextFile();
+    while (file)
+    {
+        if (file.isDirectory())
+        {
+            Serial.print("  DIR : ");
+            Serial.println(file.name());
+            if (levels)
+            {
+                listDir(fs, file.path(), levels - 1);
+            }
+        }
+        else
+        {
+            Serial.print("  FILE: ");
+            Serial.print(file.name());
+            Serial.print("\tSIZE: ");
+            Serial.println(file.size());
+        }
+        file = root.openNextFile();
+    }
 }
 
 void setup()
 {
+#if TLSLOGS == 0
+    esp_log_level_set("esp-tls-mbedtls", ESP_LOG_NONE);
+    esp_log_level_set("esp_https_server", ESP_LOG_NONE);
+#endif
+
     esp_timer_create_args_t timerArgs = {
         .callback = &rebootCallback,
         .arg = nullptr,
@@ -65,39 +78,6 @@ void setup()
         return;
     }
     listDir(LittleFS, "/", 3);
-
-          File fp = LittleFS.open("/server.crt");
-      if (fp) {
-        server_cert = fp.readString();
-        app_enable_ssl = true;
-      } else {
-        outputDebugLine("server.pem not found, SSL not available");
-        app_enable_ssl = false;
-      }
-      fp.close();
-
-      File fp2 = LittleFS.open("/server.key");
-      if (fp2) {
-        server_key = fp2.readString();
-        app_enable_ssl = true;
-      } else {
-        outputDebugLine("server.key not found, SSL not available");
-        app_enable_ssl = false;
-      }
-      fp2.close();
-
-      if (app_enable_ssl)
-      {
-        outputDebugLine("SSL enabled");
-        server = &httpsServer;
-        server->setCertificate(server_cert.c_str(), server_key.c_str());
-      }
-      else
-      {
-        outputDebugLine("SSL disabled");
-        server = &httpServer;
-      }
-
 
     outputDebugLine("Checking for preferences");
     prefs.begin("wolrelay", false);
@@ -120,7 +100,6 @@ void setup()
         prefs.isKey("apiKey");
         prefs.end();
 
-
         outputDebugLine("Preferences found, loading config");
         loadConfig();
         basicAuth.setUsername("admin");
@@ -133,6 +112,7 @@ void setup()
         {
             outputDebugLine("Connected to WiFi");
             outputDebugLine(WiFi.localIP());
+            prepareServer();
             updateDeviceStatus();
             startWebApp();
         }
@@ -140,6 +120,7 @@ void setup()
         {
             outputDebugLine("Failed to connect to WiFi");
             outputDebugLine("Starting setup portal");
+            prepareServer();
             startSetupPortal();
         }
     }
