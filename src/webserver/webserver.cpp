@@ -72,19 +72,64 @@ void prepareServer()
                 redirectServer->config.ctrl_port = 20424; // just a random port different from the default one
                 redirectServer->config.stack_size = 4096; // we dont need a large stack size for this.
                 redirectServer->onNotFound([](PsychicRequest *request, PsychicResponse *response)
-                    {
+                                           {
                         String url = "https://";
                         url += request->host();
                         url += request->url();
-                        return response->redirect(url.c_str()); 
-                    });
-                    redirectServer->start();
+                        return response->redirect(url.c_str()); });
+                redirectServer->start();
             }
             catch (const std::exception &e)
             {
                 outputDebugLine("Error starting HTTPS server: " + String(e.what()));
-                outputDebugLine("Falling back to HTTP server");
-                server = &httpServer;
+                outputDebugLine("Falling back to HTTPS server with default certificates");
+                File fp = LittleFS.open("/default.crt", FILE_READ);
+                if (fp)
+                {
+                    outputDebugLine("Certificate file found");
+                    server_cert = fp.readString();
+                }
+                else
+                {
+                    outputDebugLine("Certificate file not found, SSL not available");
+                    server_cert = "";
+                }
+                fp.close();
+
+                File fp2 = LittleFS.open("/default.key", FILE_READ);
+                if (fp2)
+                {
+                    server_key = fp2.readString();
+                    outputDebugLine("Certificate key file found");
+                }
+                else
+                {
+                    outputDebugLine("Certificate key file not found, SSL not available");
+                    server_key = "";
+                }
+                try
+                {
+                    outputDebugLine("Starting HTTPS server with default certificates");
+                    server = &httpsServer;
+                    server->setCertificate(server_cert.c_str(), server_key.c_str());
+                    // this creates a 2nd server listening on port 80 and redirects all requests HTTPS
+                    PsychicHttpServer *redirectServer = new PsychicHttpServer();
+                    redirectServer->config.ctrl_port = 20424; // just a random port different from the default one
+                    redirectServer->config.stack_size = 4096; // we dont need a large stack size for this.
+                    redirectServer->onNotFound([](PsychicRequest *request, PsychicResponse *response)
+                                               {
+                        String url = "https://";
+                        url += request->host();
+                        url += request->url();
+                        return response->redirect(url.c_str()); });
+                    redirectServer->start();
+                }
+                catch (const std::exception &e)
+                {
+                    outputDebugLine("Error starting HTTPS server: " + String(e.what()));
+                    outputDebugLine("Falling back to HTTP server");
+                    server = &httpServer;
+                }
             }
         }
         else
@@ -362,6 +407,7 @@ void startWebApp()
         doc["wifissid"] = wifiSSID;
         doc["certificate"] = server_cert;
         doc["certificateKey"] = server_key;
+        doc["httpsEnabled"] = https;
 
         JsonArray deviceArray = doc["devices"].to<JsonArray>();
 
