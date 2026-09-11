@@ -7,17 +7,23 @@ void saveConfig()
 {
     prefs.begin("wolrelay", false);
 
-    outputDebugLine("Saving apiKey");
+    outputDebug("Saving apiKey: ");
+    outputDebugLine(apiKey);
     prefs.putString("apiKey", apiKey);
-    outputDebugLine("Saving adminUser");
+    outputDebug("Saving adminUser: ");
+    outputDebugLine(adminUser);
     prefs.putString("adminUser", adminUser);
-    outputDebugLine("Saving adminPassword");
+    outputDebugLine("Saving adminPassword: ");
+    outputDebugLine(adminPassword);
     prefs.putString("adminPassword", adminPassword);
-    outputDebugLine("Saving wifiSSID");
+    outputDebug("Saving wifiSSID: ");
+    outputDebugLine(wifiSSID);
     prefs.putString("wifiSSID", wifiSSID);
-    outputDebugLine("Saving wifiPassword");
+    outputDebug("Saving wifiPassword: ");
+    outputDebugLine(wifiPassword);
     prefs.putString("wifiPassword", wifiPassword);
-    outputDebugLine("Saving https");
+    outputDebug("Saving https: ");
+    outputDebugLine(https);
     prefs.putBool("https", https);
 
     outputDebugLine("Saving certificates");
@@ -73,17 +79,6 @@ void saveConfig()
         outputDebugLine("Default certificate file not found. This should never happen!");
     }
     fp.close();
-    // LittleFS.remove("/server.crt");
-    // File fp = LittleFS.open("/server.crt", FILE_WRITE, true);
-    // outputDebugLine("Saving server.crt");
-    // fp.write((const uint8_t *)server_cert.c_str(), server_cert.length());
-    // fp.close();
-
-    // LittleFS.remove("/server.key");
-    // File fp2 = LittleFS.open("/server.key", FILE_WRITE, true);
-    // outputDebugLine("Saving server.key");
-    // fp2.write((const uint8_t *)server_key.c_str(), server_key.length());
-    // fp2.close();
 
     outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)

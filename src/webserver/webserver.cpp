@@ -552,12 +552,12 @@ void startSetupPortal()
 
                     deserializeJson(doc, body);
 
-                    String wifiSSID = doc["wifiSSID"] | "";
-                    String wifiPassword = doc["wifiPassword"] | "";
-                    String adminUser = doc["adminUser"] | "";
-                    String adminPassword = doc["adminPassword"] | "";
-                    String apiKey = doc["apiKey"] | "";
-                    bool https = doc["httpsEnabled"] | false;
+                    wifiSSID = doc["wifiSSID"] | "";
+                    wifiPassword = doc["wifiPassword"] | "";
+                    adminUser = doc["adminUser"] | "";
+                    adminPassword = doc["adminPassword"] | "";
+                    apiKey = doc["apiKey"] | "";
+                    https = doc["httpsEnabled"] | false;
                     String sentServer_cert = doc["certificate"] | "";
                     String sentServer_key = doc["certificateKey"] | "";
 
