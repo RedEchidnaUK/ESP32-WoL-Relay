@@ -37,27 +37,6 @@ async function loadSetupConfig() {
     }
 }
 
-async function generateAPIKey() {
-    try {
-        const response = await fetch("/api/apikey", {
-            method: 'GET',
-            signal: AbortSignal.timeout(5_000),
-        });
-        const newAPIKey = await response.json();
-
-        document.getElementById("apiKey").value = newAPIKey.apiKey || "";
-    }
-    catch (error) {
-        if (error.name === 'TimeoutError') {
-            alertbox(`<p class="error">'Network error - Unable to generate new API Key!'</p>`);
-        }
-        else {
-            console.log("Unknown error: " + error)
-            alertbox('Unknown error - Please try again.');
-        }
-    }
-}
-
 async function saveSettings() {
     let valid = true;
     let alertTextAdditional = "";
@@ -315,6 +294,23 @@ function debounce(fn, delay = 500) {
         }, delay);
     };
 };
+
+function generateAPIKey() {
+    const charset =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "abcdefghijklmnopqrstuvwxyz" +
+        "0123456789" +
+        "~_-";
+
+    let key = "";
+
+    for (let i = 0; i < 32; i++) {
+        const random = crypto.getRandomValues(new Uint32Array(1))[0];
+        key += charset[random % charset.length];
+    }
+
+    document.getElementById("apiKey").value = key;
+}
 
 // 
 // Event listeners
