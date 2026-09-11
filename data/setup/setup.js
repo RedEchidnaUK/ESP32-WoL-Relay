@@ -130,6 +130,24 @@ async function saveSettings() {
         }
     }
 
+    let temp = 96;
+    const Errors = {
+        A: { bit: 1, message: "Invalid WiFi SSID" },
+        B: { bit: 2, message: "Invalid WiFi Password" },
+        C: { bit: 4, message: "Invalid Admin User" },
+        D: { bit: 8, message: "Invalid Admin Password" },
+        E: { bit: 16, message: "Invalid API Key" },
+        F: { bit: 32, message: "Invalid Certificate" },
+        G: { bit: 64, message: "Invalid Certificate Key" }
+    };
+
+    const activeErrorsHTML = Object.values(Errors)
+        .filter(error => temp & error.bit)
+        .map(error => `<p class="error">${error.message}</p>`)
+        .join("");
+
+    console.log(activeErrorsHTML);
+
     if (!valid) {
         alertbox(`<p class="error">Invalid details. Please check,</p>${alertTextAdditional}`);
         return;
@@ -137,6 +155,7 @@ async function saveSettings() {
     else {
         console.log(JSON.stringify(data))
     }
+
     try {
         const response = await fetch("/save", {
             method: 'POST',
@@ -163,7 +182,8 @@ async function saveSettings() {
                 C: { bit: 4, message: "Invalid Admin User" },
                 D: { bit: 8, message: "Invalid Admin Password" },
                 E: { bit: 16, message: "Invalid API Key" },
-                F: { bit: 32, message: "Invalid Certificate(s)" }
+                F: { bit: 32, message: "Invalid Certificate" },
+                G: { bit: 64, message: "Invalid Certificate Key" }
             };
 
             const activeErrorsHTML = Object.values(Errors)

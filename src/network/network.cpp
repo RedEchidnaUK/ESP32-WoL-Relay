@@ -51,7 +51,7 @@ bool pingHost(String ip)
     }
 }
 
-bool validateCertificates(String certificate, String certificateKey)
+int validateCertificates(String certificate, String certificateKey)
 {
     outputDebugLine("Validating certificates");
     outputDebugLine("Certificate: ");
@@ -73,7 +73,7 @@ bool validateCertificates(String certificate, String certificateKey)
     outputDebugLine(certCode);
 
     if (certCode != 0)
-        return false;
+        return 1;
 
     certCode = mbedtls_pk_parse_key(&key, (const unsigned char *)certificateKey.c_str(), certificateKey.length() + 1, nullptr, 0);
 
@@ -81,7 +81,7 @@ bool validateCertificates(String certificate, String certificateKey)
     outputDebugLine(certCode);
 
     if (certCode != 0)
-        return false;
+        return 2;
 
     certCode = mbedtls_pk_check_pair(&certChain.pk, &key);
 
@@ -89,7 +89,7 @@ bool validateCertificates(String certificate, String certificateKey)
     outputDebugLine(certCode);
 
     if (certCode != 0)
-        return false;
+        return 3;
 
-    return true;
+    return 0;
 }

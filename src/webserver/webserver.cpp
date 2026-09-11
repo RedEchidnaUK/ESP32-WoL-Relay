@@ -48,7 +48,7 @@ void prepareServer()
         if (server_cert.length() > 0 && server_key.length() > 0)
         {
             outputDebugLine("Server certifcates found");
-            if (validateCertificates(server_cert, server_key))
+            if (validateCertificates(server_cert, server_key) == 0)
             {
                 outputDebugLine("Server certifcates valid");
                 app_enable_ssl = true;
@@ -278,10 +278,8 @@ void startWebApp()
 
                 if (sentCertificate != server_cert || sentCertificateKey != server_key)
                 {
-                    // if (sentHttps)
-                    // {
                     outputDebugLine("Validating certificates");
-                    if (validateCertificates(sentCertificate, sentCertificateKey))
+                    if (validateCertificates(sentCertificate, sentCertificateKey) == 0)
                     {
                         outputDebugLine("Certificates valid");
                         https = sentHttps;
@@ -300,7 +298,6 @@ void startWebApp()
                 {
                     https = sentHttps;
                     doc["result"] = "Saved";
-                // }
                 }
             }
             else
@@ -519,8 +516,6 @@ void startSetupPortal()
     server->serveStatic("/assets/", LittleFS, "/assets/");
     server->serveStatic("/", LittleFS, "/setup/");
 
-    // server->serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
-    // server->serveStatic("/", LittleFS, "/app/")->addMiddleware(&basicAuth);
     server->on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
                {
                     JsonDocument doc;
@@ -589,17 +584,30 @@ void startSetupPortal()
                         }
                     }
 
-                    if ((sentServer_cert != NULL && sentServer_key != NULL) || (sentServer_cert.length() > 0 && sentServer_key.length() > 0))
+                    if ((sentServer_cert.length() > 0 || sentServer_key.length() > 0))
                     {
-                        if (validateCertificates(sentServer_cert, sentServer_key))
+                        switch (validateCertificates(sentServer_cert, sentServer_key))
                         {
+                        case 0:
                             server_cert = sentServer_cert;
                             server_key = sentServer_key;
-                        }
-                        else 
-                        {
-                            outputDebugLine("Invalid certificates sent");
+                            break;
+                        case 1:
+                            outputDebugLine("Invalid certificate sent");
                             errorCode += 32;
+                            break;
+                        case 2:
+                            outputDebugLine("Invalid certificate key sent");
+                            errorCode += 64;
+                            break;
+                        case 3:
+                            outputDebugLine("Invalid certificates sent");
+                            errorCode += 96;
+                            break;
+                        default:
+                            outputDebugLine("Unknown certificate error");
+                            errorCode += 96;
+                            break;
                         }
                     }
 
