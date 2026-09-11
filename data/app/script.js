@@ -299,18 +299,27 @@ const debounce = (fn, delay = 500) => {
         }, delay);
     };
 };
+function setRequired(element) {
+    if (element.value.length > 0) {
+        element.required = true;
+    }
+    else {
+        element.required = false;
+    }
+}
 
-const checkInput = (id) => {
+function checkInput(id) {
     let valid = false;
     const input = document.getElementById(id);
 
-    if (/^(ip|bc)\d+$/.test(id)) {
+    if (/^(ip|bc)\d+$/.test(id) && input.value.length >= input.minLength) {
         valid = isIPAddresslValid(input.value.trim());
     }
-    else if (/^(mac)\d+$/.test(id)) {
+    else if (/^(mac)\d+$/.test(id) && input.value.length >= input.minLength) {
         valid = isMACAddresslValid(input.value.trim());
     }
-    else if (input.required && input.value.trim() !== "") {
+
+    else if (input.required && input.value.trim() !== "" && input.value.length >= input.minLength) {
         valid = true;
     }
     else if (!input.required) {
@@ -337,11 +346,11 @@ function updateRowEnabled(rowNumber) {
 
     if (enabled) {
         [fields.ip, fields.mac, fields.bc].forEach(field =>
-            checkInput(field.id) ? field.parentElement.classList.add('success') : field.parentElement.classList.add('error')
+            checkInput(field.id) ? null : field.parentElement.classList.add('error')
         );
     } else {
         [fields.ip, fields.mac, fields.bc].forEach(field =>
-            field.parentElement.classList.remove('error', 'success')
+            field.parentElement.classList.remove('error')
         );
     }
 }
@@ -369,8 +378,8 @@ function enableHTTPS() {
     certKeyField.disabled = !certKeyField.disabled;
     certField.required = !certField.disabled;
     certKeyField.required = !certKeyField.disabled;
-    certField.parentElement.classList.remove('error', 'success');
-    certKeyField.parentElement.classList.remove('error', 'success');
+    certField.parentElement.classList.remove('error');
+    certKeyField.parentElement.classList.remove('error');
 
     if (!certField.disabled && (certField.value.trim() === "" || checkCertificateField(certField) === false)) {
         certField.parentElement.classList.add('error');
@@ -430,11 +439,9 @@ document.getElementById("save").addEventListener("input", debounce(e => {
     if (field.closest(".certArea")) {
         valid = checkCertificateField(field, field.id === "certificateKey");
         field.parentElement.classList.toggle('error', !valid);
-        field.parentElement.classList.toggle('success', valid);
     }
     else {
         valid = checkInput(field.id);
         field.parentElement.classList.toggle('error', !valid);
-        field.parentElement.classList.toggle('success', valid);
     }
 }));

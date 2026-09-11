@@ -53,9 +53,9 @@
                     <label for="wifiPassword">WiFi Password:</label>
                 </div>
                 <div class="right">
-                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32" required="true" value="test"></div>
-                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32"
-                            placeholder="Set to update" maxlength="32"></div>
+                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32" required="true" minlength="1"></div>
+                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32" minlength="8"
+                            placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
                 </div>
             </div>
             <div class="center">
@@ -70,8 +70,8 @@
                 </div>
                 <div class="right">
                     <div><input type="text" id="adminUser" name="adminUser" size="32" required="true" maxlength="32"></div>
-                    <div><input type="password" id="adminPassword" name="adminPassword" size="32"
-                            placeholder="Set to update" maxlength="32"></div>
+                    <div><input type="password" id="adminPassword" name="adminPassword" size="32" minlength="12"
+                            placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
                 </div>
             </div>
             <div class="center">
