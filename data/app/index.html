@@ -13,18 +13,18 @@
     <h2>ESP32 WoL Relay</h2>
 
     <div class="bar">
-        <button class="bar-item bar-button" onclick="opensetting('devices')">Device
+        <button type="button" class="bar-item bar-button" onclick="opensetting('devices')">Device
             Settings</button>
-        <button class="bar-item bar-button" onclick="opensetting('wifi')">WiFi
+        <button type="button" class="bar-item bar-button" onclick="opensetting('wifi')">WiFi
             Settings</button>
-        <button class="bar-item bar-button" onclick="opensetting('admin')">Admin
+        <button type="button" class="bar-item bar-button" onclick="opensetting('admin')">Admin
             Settings</button>
-        <button class="bar-item bar-button" onclick="opensetting('api')">API
+        <button type="button" class="bar-item bar-button" onclick="opensetting('api')">API
             Settings</button>
-        <button class="bar-item bar-button" onclick="opensetting('https')">HTTPS
+        <button type="button" class="bar-item bar-button" onclick="opensetting('https')">HTTPS
             Settings</button>
     </div>
-    <form method="POST" action="/save" id="save" class="form">
+    <div>
         <div id="devices" class="setting-item-show">
             <div class="form-field">
                 <table>
@@ -69,7 +69,8 @@
                     <label for="adminPassword">Admin Password:</label>
                 </div>
                 <div class="right">
-                    <div><input type="text" id="adminUser" name="adminUser" size="32" required="true" maxlength="32"></div>
+                    <div><input type="text" id="adminUser" name="adminUser" size="32" required="true" maxlength="32">
+                    </div>
                     <div><input type="password" id="adminPassword" name="adminPassword" size="32" minlength="12"
                             placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
                 </div>
@@ -84,10 +85,11 @@
                     <label for="apiKey">API Key:</label>
                 </div>
                 <div class="right">
-                <div>
-                    <input type="text" id="apiKey" name="apiKey" size="40" required="true" placeholder="Set to update"
-                        maxlength="40">&nbsp;<button type="button" onclick="generateAPIKey()"
-                        class="custom-button-small">Generate</button></div>
+                    <div>
+                        <input type="text" id="apiKey" name="apiKey" size="40" required="true"
+                            placeholder="Set to update" maxlength="40">&nbsp;<button type="button"
+                            onclick="generateAPIKey()" class="custom-button-small">Generate</button>
+                    </div>
                 </div>
             </div>
             <div class="center">
@@ -127,7 +129,7 @@
                 </div>
             </div>
         </div>
-    </form>
+    </div>
     <div id="customAlertBox" class="custom-alert">
         <div class="custom-alert-content">
             <span class="close">&times;</span>
