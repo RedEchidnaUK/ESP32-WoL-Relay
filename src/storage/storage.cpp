@@ -206,6 +206,15 @@ void checkResetButton()
             prefs.clear();
             prefs.end();
 
+            if(LittleFS.exists("/server.crt"))
+            {
+                LittleFS.remove("/server.crt");
+            }
+            if(LittleFS.exists("/server.key"))
+            {
+                LittleFS.remove("/server.key");
+            }
+
             for (size_t i = 0; i < 5; i++)
             {
                 delay(500);

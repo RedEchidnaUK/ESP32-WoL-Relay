@@ -104,7 +104,7 @@ async function saveSection(containerId) {
             break;
         case "https":
             if (document.getElementById("httpsEnabled").checked) {
-                data["httpsEnabled"] = true;
+                // data["httpsEnabled"] = true;
                 container.querySelectorAll(".certArea textarea").forEach(field => {
 
                     const value = field.value.trim();
@@ -125,9 +125,9 @@ async function saveSection(containerId) {
                     }
                 });
             }
-            else {
-                data["httpsEnabled"] = false;
-            }
+            // else {
+                data["httpsEnabled"] = document.getElementById("httpsEnabled").checked;
+            // }
             break;
         default:
             container.querySelectorAll('input').forEach(element => {
@@ -320,8 +320,6 @@ const checkInput = (id) => {
         valid = true;
 
     }
-    // input.parentElement.classList.toggle('error', !valid);
-    // input.parentElement.classList.toggle('success', valid);
     return valid;
 }
 
@@ -393,18 +391,12 @@ function checkCertificateField(element, key = false) {
         let lastLine = lines[lines.length - 1];
 
         if (firstLine === "-----BEGIN CERTIFICATE-----" && lastLine === "-----END CERTIFICATE-----" && key === false) {
-            // element.parentElement.classList.add("success");
-            // element.parentElement.classList.remove("error");
             return true;
         }
         else if (firstLine === "-----BEGIN PRIVATE KEY-----" && lastLine === "-----END PRIVATE KEY-----" && key === true) {
-            // element.parentElement.classList.add("success");
-            // element.parentElement.classList.remove("error");
             return true;
         }
         else {
-            // element.parentElement.classList.add("error");
-            // element.parentElement.classList.remove("success");
             return false;
         }
     }

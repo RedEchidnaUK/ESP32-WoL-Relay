@@ -160,7 +160,7 @@ void startWebApp()
 
             deserializeJson(doc, body);
 
-            String tab = doc["tab"].as<String>();
+            String tab = doc["tab"];
 
             if (tab == "devices")
             {
@@ -514,109 +514,112 @@ void startWebApp()
 
 void startSetupPortal()
 {
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP("ESP32 WoL Relay");
 
     // Make sure the order for 'serveStatic' is most to least specific
-    server->serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
-    server->serveStatic("/", LittleFS, "/setup/")->addMiddleware(&basicAuth);
+    server->serveStatic("/assets/", LittleFS, "/assets/");
+    server->serveStatic("/", LittleFS, "/setup/");
 
+    // server->serveStatic("/assets/", LittleFS, "/assets/")->addMiddleware(&basicAuth);
+    // server->serveStatic("/", LittleFS, "/app/")->addMiddleware(&basicAuth);
     server->on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
                {
-                JsonDocument doc;
+                    JsonDocument doc;
 
-                doc["adminUser"] = "admin";
-                doc["adminPassword"] = WiFi.macAddress();
-                doc["apiKey"] = apiKey;
+                    doc["adminUser"] = "admin";
+                    doc["adminPassword"] = WiFi.macAddress();
+                    doc["apiKey"] = apiKey;
+                    doc["certificate"] = server_cert;
+                    doc["certificateKey"] = server_key;
 
-                String json;
-                serializeJson(doc, json);
+                    String json;
+                    serializeJson(doc, json);
 
-                return response->send(200, "application/json", json.c_str()); });
+                    return response->send(200, "application/json", json.c_str()); });
 
     server->on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
                {
-                  wifiSSID = request->getParam("wifiSSID", "");
-                  wifiPassword = request->getParam("wifiPassword", "");
-                  adminUser = request->getParam("adminUser", "");
-                  adminPassword = request->getParam("adminPassword", "");
-                  apiKey = request->getParam("apiKey", "");
+                    int errorCode = 0;
+                    int responseStatusCode = 200;
+                    String body = request->body();
+                    JsonDocument doc;
 
-                  int errorCode = 0;
+                    deserializeJson(doc, body);
 
-                  outputDebugLine(wifiSSID);
-                  outputDebugLine(wifiPassword);
-                  outputDebugLine(adminUser);
-                  outputDebugLine(adminPassword);
-                  outputDebugLine(apiKey);
+                    String wifiSSID = doc["wifiSSID"] | "";
+                    String wifiPassword = doc["wifiPassword"] | "";
+                    String adminUser = doc["adminUser"] | "";
+                    String adminPassword = doc["adminPassword"] | "";
+                    String apiKey = doc["apiKey"] | "";
+                    bool https = doc["httpsEnabled"] | false;
+                    String sentServer_cert = doc["certificate"] | "";
+                    String sentServer_key = doc["certificateKey"] | "";
 
-                  JsonDocument doc;
-                  String json;
+                    outputDebugLine("Sent JSON: ");
+                    outputDebugLine(body);
 
-                  if (wifiSSID.length() == 0 || wifiPassword.length() == 0 || adminUser.length() == 0 || adminPassword.length() == 0 || apiKey.length() == 0)
-                  {
-                      if (wifiSSID.length() == 0 || wifiPassword.length() == 0)
-                      {
-                          outputDebugLine("Missing SSID or password");
-                          errorCode = 1;
-                      }
-                      if (adminUser.length() == 0 || adminPassword.length() == 0)
-                      {
-                          outputDebugLine("Missing admin username or password");
-                          errorCode = 2 + errorCode;
-                      }
-                      if (apiKey.length() == 0)
-                      {
-                          outputDebugLine("Missing API key");
-                          errorCode = 4 + errorCode;
-                      }
+                    doc.clear();
+                    body.clear();
 
-                      switch (errorCode)
-                      {
-                      case 1:
-                          doc["result"] = "Invalid WiFi settings";
-                          break;
-                      case 2:
-                          doc["result"] = "Invalid Admin settings";
-                          break;
-                      case 3:
-                          doc["result"] = "Invalid WiFi and Admin Settings";
-                          break;
-                      case 4:
-                          doc["result"] = "Invalid API Settings";
-                          break;
-                      case 5:
-                          doc["result"] = "Invalid WiFi and API Settings";
-                          break;
-                      case 6:
-                          doc["result"] = "Invalid Admin and API Settings";
-                          break;
-                      case 7:
-                          doc["result"] = "Invalid WiFi, Admin and API Settings";
-                          break;
-                      default:
-                          doc["result"] = "Unknown error!";
-                          break;
-                      }
-                      serializeJson(doc, json);
-                      return response->send(400, "application/json", json.c_str());
-                  }
+                    if (wifiSSID.length() == 0 || wifiPassword.length() < 8 || adminUser.length() == 0 || adminPassword.length() < 12 || apiKey.length() == 0)
+                    {
+                        if (wifiSSID.length() == 0)
+                        {
+                            outputDebugLine("Invalid WiFi SSID");
+                            errorCode += 1;
+                        }
+                        if (wifiPassword.length() < 8)
+                        {
+                            outputDebugLine("Invalid WiFi password");
+                            errorCode += 2;
+                        }
+                        if (adminUser.length() == 0)
+                        {
+                            outputDebugLine("Invalid Admin User");
+                            errorCode += 4;
+                        }
+                        if (adminPassword.length() < 12)
+                        {
+                            outputDebugLine("Invalid Admin Password");
+                            errorCode += 8;
+                        }
+                        if (apiKey.length() == 0)
+                        {
+                            outputDebugLine("Invalid API key");
+                            errorCode += 16;
+                        }
+                    }
 
-                  outputDebugLine("Saving config");
-                  prefs.begin("wolrelay", false);
-                  prefs.putString("wifiSSID", wifiSSID);
-                  prefs.putString("wifiPassword", wifiPassword);
+                    if ((sentServer_cert != NULL && sentServer_key != NULL) || (sentServer_cert.length() > 0 && sentServer_key.length() > 0))
+                    {
+                        if (validateCertificates(sentServer_cert, sentServer_key))
+                        {
+                            server_cert = sentServer_cert;
+                            server_key = sentServer_key;
+                        }
+                        else 
+                        {
+                            outputDebugLine("Invalid certificates sent");
+                            errorCode += 32;
+                        }
+                    }
 
-                  prefs.end();
+                if(errorCode == 0)
+                {
+                    outputDebugLine("Saving config");
+                    saveConfig();
+                    outputDebugLine("Starting reboot timer");
 
-                  saveConfig();
+                    esp_timer_start_once(rebootTimer, 5500000);
+                }
+                else {
+                    responseStatusCode = 400;
+                }
+                outputDebug("Setting result: ");
+                outputDebugLine(errorCode);
 
-                  doc["result"] = "Success!";
-                  serializeJson(doc, json);
-                  outputDebugLine("Starting reboot timer");
-
-                  esp_timer_start_once(rebootTimer, 5500000);
-                  return response->send(200, "application/json", json.c_str()); });
+                doc["result"] = errorCode;
+                serializeJson(doc,body); 
+                return response->send(responseStatusCode, "application/json", body.c_str()); });
 
     server->on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
                {

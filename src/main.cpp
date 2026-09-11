@@ -91,7 +91,29 @@ void setup()
         apiKey = generateApiKey();
         outputDebugLine("Generated new API key: " + apiKey);
 
+        File fp;
+
+        fp = LittleFS.open("/default.crt", FILE_READ);
+
+        outputDebugLine("Loaded default certificate");
+        server_cert = fp.readString();
+
+        fp.close();
+
+        fp = LittleFS.open("/default.key", FILE_READ);
+        server_key = fp.readString();
+        outputDebugLine("Loaded default certificate Key");
+
+        fp.close();
+
         outputDebugLine("Starting setup portal");
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP("ESP32 WoL Relay");
+        WiFi.begin();
+        outputDebug("Started AP WiFi at IP: ");
+        outputDebugLine(WiFi.softAPIP());
+
+        prepareServer();
         startSetupPortal();
     }
     else
@@ -120,6 +142,11 @@ void setup()
         {
             outputDebugLine("Failed to connect to WiFi");
             outputDebugLine("Starting setup portal");
+            WiFi.mode(WIFI_AP);
+            WiFi.softAP("ESP32 WoL Relay");
+            WiFi.begin();
+            outputDebug("Started AP WiFi at IP: ");
+            outputDebugLine(WiFi.softAPIP());
             prepareServer();
             startSetupPortal();
         }

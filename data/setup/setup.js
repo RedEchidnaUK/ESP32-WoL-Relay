@@ -48,6 +48,7 @@ async function saveSettings() {
     const wifiSSIDElement = document.getElementById("wifiSSID");
     const wifiPasswordElement = document.getElementById("wifiPassword");
     const apiKeyElement = document.getElementById("apiKey");
+    const httpsEnabledElement = document.getElementById("httpsEnabled")
     const data = {};
 
     if (checkInput(wifiSSIDElement.id)) {
@@ -61,7 +62,7 @@ async function saveSettings() {
     }
 
     if (checkInput(wifiPasswordElement.id)) {
-        data["wifiSSID"] = wifiSSIDElement.value;
+        data["wifiPassword"] = wifiPasswordElement.value;
         wifiPasswordElement.parentElement.classList.toggle("error", false);
     }
     else {
@@ -103,10 +104,10 @@ async function saveSettings() {
         apiKeyElement.parentElement.classList.toggle("error", true);
     }
 
-    data["httpsEnabled"] = document.getElementById("httpsEnabled").checked;
+    data["httpsEnabled"] = httpsEnabledElement.checked;
 
     if (document.getElementById("certificate").value.length > 0 || document.getElementById("certificateKey").value.length > 0) {
-        if (document.getElementById("httpsEnabled").checked) {
+        if (httpsEnabledElement.checked) {
             document.querySelectorAll(".certArea textarea").forEach(field => {
 
                 const value = field.value.trim();
@@ -136,40 +137,54 @@ async function saveSettings() {
     else {
         console.log(JSON.stringify(data))
     }
-    // try {
-    //     const response = await fetch("/save", {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify(data),
-    //         signal: AbortSignal.timeout(5_000),
-    //     });
+    try {
+        const response = await fetch("/save", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            signal: AbortSignal.timeout(5_000),
+        });
 
-    //     const result = await response.json();
-    //     console.log(result.status);
+        const result = await response.json();
 
-    //     if (response.ok) {
-    //         let alertText = `<p>Settings updated.</p>` +
-    //             `<p>Please switch to the network '` + document.getElementById("wifiSSID").value + `'</p>` +
-    //             `<p>Rebooting in...</p>` +
-    //             `<p class='center'><span id='rebootTimer' style='font-size: 30px;'>5</span></p>`
+        if (response.ok) {
+            let alertText = `<p>Settings updated.</p>` +
+                `<p>Please switch to the network '` + document.getElementById("wifiSSID").value + `'</p>` +
+                `<p>Rebooting in...</p>` +
+                `<p class='center'><span id='rebootTimer' style='font-size: 30px;'>5</span></p>`
 
-    //         alertbox(alertText);
-    //         startCountdown();
-    //     }
-    //     else {
-    //         alertbox(result.result);
-    //     }
-    // }
-    // catch (error) {
-    //     if (error.name === 'TimeoutError') {
-    //         alertbox('Network error!');
-    //     }
-    //     else {
-    //         console.log("Unknown error: " + error)
-    //         alertbox('Unknown error! Please try again.');
-    //     }
-    // }
+            alertbox(alertText);
+            startCountdown();
+        }
+        else {
+            const Errors = {
+                A: { bit: 1, message: "Invalid WiFi SSID" },
+                B: { bit: 2, message: "Invalid WiFi Password" },
+                C: { bit: 4, message: "Invalid Admin User" },
+                D: { bit: 8, message: "Invalid Admin Password" },
+                E: { bit: 16, message: "Invalid API Key" },
+                F: { bit: 32, message: "Invalid Certificate(s)" }
+            };
+
+            const activeErrorsHTML = Object.values(Errors)
+                .filter(error => result.result & error.bit)
+                .map(error => `<p class="error">${error.message}</p>`)
+                .join("");
+
+            alertbox(`<p class="error">Error!</p>${activeErrorsHTML}`);
+        }
+    }
+    catch (error) {
+        if (error.name === 'TimeoutError') {
+            alertbox(`<p class="error">'Network error!'</p>`);
+        }
+        else {
+            console.log("Unknown error: " + error)
+            alertbox('Unknown error! Please try again.');
+        }
+    }
 };
+
 // 
 // Functions
 // 
@@ -228,7 +243,7 @@ function characterWording(element) {
     return characterValue
 }
 
-function checkInput(id){
+function checkInput(id) {
     let valid = false;
     const input = document.getElementById(id);
 
