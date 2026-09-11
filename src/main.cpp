@@ -109,7 +109,6 @@ void setup()
         outputDebugLine("Starting setup portal");
         WiFi.mode(WIFI_AP);
         WiFi.softAP("ESP32 WoL Relay");
-        WiFi.begin();
         outputDebug("Started AP WiFi at IP: ");
         outputDebugLine(WiFi.softAPIP());
 

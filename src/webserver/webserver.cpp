@@ -143,6 +143,18 @@ void prepareServer()
         outputDebugLine("HTTP server requested");
         server = &httpServer;
     }
+
+    outputDebugLine("Starting mDNS");
+    if (!MDNS.begin(MDNSNAME)) // Do NOT put .local on the end of this!
+    {
+        outputDebugLine("Error starting mDNS");
+        while (1)
+        {
+            delay(1000);
+        }
+    }
+
+    MDNS.addService("_http", "_tcp", 80);
 }
 
 void startWebApp()

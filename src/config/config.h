@@ -10,6 +10,7 @@
 #include <ArduinoJson.h>
 #include <FS.h>
 #include <LittleFS.h>
+#include <ESPmDNS.h>
 
 #define RESET_PIN 0
 #define RESET_HOLD_TIME 5000
@@ -18,6 +19,7 @@
 #define DEBUG 1
 #define TLSLOGS 0
 #define STATUS_CHECK_INTERVAL 30000
+#define MDNSNAME "esp32wolrelay"
 
 #if DEBUG==1
 #define outputDebug(x); Serial.print(x);
