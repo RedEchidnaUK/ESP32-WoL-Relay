@@ -1,14 +1,6 @@
-// 
-// Variables
-// 
-
-let alertBox = document.getElementById("customAlertBox");
-let alert_Message_container = document.getElementById("alertMessage");
-let close_img = document.querySelector(".close");
-
-// 
+//
 // Async functions
-// 
+//
 
 async function loadConfig() {
     try {
@@ -276,29 +268,6 @@ function buildDeviceTable(devices) {
     });
 }
 
-const isIPAddresslValid = (ipAddress) => {
-    const re = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    return re.test(ipAddress);
-};
-
-const isMACAddresslValid = (MACAddress) => {
-    const re = /^(?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2})$/;
-    return re.test(MACAddress);
-};
-
-const debounce = (fn, delay = 500) => {
-    let timeoutId;
-    return (...args) => {
-        // cancel the previous timer
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-        // setup a new timer
-        timeoutId = setTimeout(() => {
-            fn.apply(null, args)
-        }, delay);
-    };
-};
 function setRequired(element) {
     if (element.value.length > 0) {
         element.required = true;
@@ -306,27 +275,6 @@ function setRequired(element) {
     else {
         element.required = false;
     }
-}
-
-function checkInput(id) {
-    let valid = false;
-    const input = document.getElementById(id);
-
-    if (/^(ip|bc)\d+$/.test(id) && input.value.length >= input.minLength) {
-        valid = isIPAddresslValid(input.value.trim());
-    }
-    else if (/^(mac)\d+$/.test(id) && input.value.length >= input.minLength) {
-        valid = isMACAddresslValid(input.value.trim());
-    }
-
-    else if (input.required && input.value.trim() !== "" && input.value.length >= input.minLength) {
-        valid = true;
-    }
-    else if (!input.required) {
-        valid = true;
-
-    }
-    return valid;
 }
 
 function updateRowEnabled(rowNumber) {
@@ -353,11 +301,6 @@ function updateRowEnabled(rowNumber) {
             field.parentElement.classList.remove('error')
         );
     }
-}
-
-function alertbox(html) {
-    alert_Message_container.innerHTML = html;
-    alertBox.style.display = "block";
 }
 
 function opensetting(settingName) {
@@ -388,60 +331,3 @@ function enableHTTPS() {
         certKeyField.parentElement.classList.add('error');
     }
 }
-
-function checkCertificateField(element, key = false) {
-
-    if (!element.disabled) {
-        let lines = element.value.split('\n');
-        let firstLine = lines[0];
-        let lastLine = lines[lines.length - 1];
-
-        if (firstLine === "-----BEGIN CERTIFICATE-----" && lastLine === "-----END CERTIFICATE-----" && key === false) {
-            return true;
-        }
-        else if (firstLine === "-----BEGIN PRIVATE KEY-----" && lastLine === "-----END PRIVATE KEY-----" && key === true) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-}
-
-function generateAPIKey() {
-    const charset =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-        "abcdefghijklmnopqrstuvwxyz" +
-        "0123456789" +
-        "~_-";
-
-    let key = "";
-
-    for (let i = 0; i < 32; i++) {
-        const random = crypto.getRandomValues(new Uint32Array(1))[0];
-        key += charset[random % charset.length];
-    }
-
-    document.getElementById("apiKey").value = key;
-}
-
-// 
-// Event listeners
-// 
-
-window.addEventListener("load", loadConfig);
-
-close_img.addEventListener('click', function () { alertBox.style.display = "none"; });
-
-document.getElementById("save").addEventListener("input", debounce(e => {
-    const field = e.target;
-    let valid = false
-    if (field.closest(".certArea")) {
-        valid = checkCertificateField(field, field.id === "certificateKey");
-        field.parentElement.classList.toggle('error', !valid);
-    }
-    else {
-        valid = checkInput(field.id);
-        field.parentElement.classList.toggle('error', !valid);
-    }
-}));
