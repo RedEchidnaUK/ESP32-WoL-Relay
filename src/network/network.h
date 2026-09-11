@@ -4,3 +4,4 @@
 wl_status_t connectWifi();
 bool pingHost(String ip);
 bool sendWOL(int id);
+int validateCertificates(String certifcate, String certificateKey);

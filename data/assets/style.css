@@ -33,14 +33,52 @@ th {
     padding: 18px;
 }
 
-.form-field input {
+textarea{
+    width: 100%;
+    border: solid 2px #f0f0f0;
+    border-radius: 3px;
+    padding: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin: 10px 0;
+}
+
+textarea[readonly] {
+    background-color: #e2e2e2;
+    color: darkgray;
+}
+
+.certArea{
+    padding-top: 10px;
+}
+
+.form-field input{
     border: solid 2px #f0f0f0;
     border-radius: 3px;
     padding: 5px;
     font-size: 14px;
 }
 
-.form-field-table input {
+.error {
+    color: var(--error-color);
+}
+
+.error input, .error textarea {
+    border-color: var(--error-color);
+    outline-color: var(--error-color);
+}
+
+.success input {
+    border-color: var(--success-color);
+    outline-color: var(--success-color);
+}
+
+.success textarea {
+    border-color: var(--success-color);
+    outline-color: var(--success-color);
+}
+
+.form-field-table input{
     border: solid 2px #f0f0f0;
     border-radius: 3px;
     padding: 10px;
@@ -52,7 +90,7 @@ th {
     box-sizing: border-box;
 }
 
-.form-field-table.error input:focus {
+.form-field-table.error input{
     border-color: var(--error-color);
     outline-color: var(--error-color);
 }
@@ -235,13 +273,13 @@ th {
 
 .container>.right {
     flex-grow: 1;
+    margin-left: 10px;
 }
 
 .container>div {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    margin: 0 10px;
 }
 
 .container>div.left {

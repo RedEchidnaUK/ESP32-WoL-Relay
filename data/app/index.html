@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 Wake on Lan Relay</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+</head>
+
+<body>
+    <h2>ESP32 WoL Relay</h2>
+
+    <div class="bar">
+        <button class="bar-item bar-button" onclick="opensetting('devices')">Device
+            Settings</button>
+        <button class="bar-item bar-button" onclick="opensetting('wifi')">WiFi
+            Settings</button>
+        <button class="bar-item bar-button" onclick="opensetting('admin')">Admin
+            Settings</button>
+        <button class="bar-item bar-button" onclick="opensetting('api')">API
+            Settings</button>
+        <button class="bar-item bar-button" onclick="opensetting('https')">HTTPS
+            Settings</button>
+    </div>
+    <form method="POST" action="/save" id="save" class="form">
+        <div id="devices" class="setting-item-show">
+            <div class="form-field">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>MAC</th>
+                            <th>IP</th>
+                            <th>Broadcast</th>
+                            <th>Enabled</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceTable">
+                    </tbody>
+                </table>
+            </div>
+            <div class="center">
+                <button type="button" onclick="saveSection('devices')" class="custom-button">Save</button>
+            </div>
+        </div>
+        <div id="wifi" class="setting-item-hide">
+            <div class="form-field container">
+                <div class="left">
+                    <label for="wifiSSID">WiFi SSID:</label>
+                    <label for="wifiPassword">WiFi Password:</label>
+                </div>
+                <div class="right">
+                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32" required="true" minlength="1"></div>
+                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32" minlength="8"
+                            placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
+                </div>
+            </div>
+            <div class="center">
+                <button type="button" onclick="saveSection('wifi')" class="custom-button">Save</button>
+            </div>
+        </div>
+        <div id="admin" class="setting-item-hide">
+            <div class="form-field container">
+                <div class="left">
+                    <label for="adminUser">Admin Username:</label>
+                    <label for="adminPassword">Admin Password:</label>
+                </div>
+                <div class="right">
+                    <div><input type="text" id="adminUser" name="adminUser" size="32" required="true" maxlength="32"></div>
+                    <div><input type="password" id="adminPassword" name="adminPassword" size="32" minlength="12"
+                            placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
+                </div>
+            </div>
+            <div class="center">
+                <button type="button" onclick="saveSection('admin')" class="custom-button">Save</button>
+            </div>
+        </div>
+        <div id="api" class="setting-item-hide">
+            <div class="form-field container">
+                <div class="left">
+                    <label for="apiKey">API Key:</label>
+                </div>
+                <div class="right">
+                <div>
+                    <input type="text" id="apiKey" name="apiKey" size="40" required="true" placeholder="Set to update"
+                        maxlength="40">&nbsp;<button type="button" onclick="generateAPIKey()"
+                        class="custom-button-small">Generate</button></div>
+                </div>
+            </div>
+            <div class="center">
+                <button type="button" onclick="saveSection('api')" class="custom-button">Save</button>
+            </div>
+        </div>
+        <div id="https" class="setting-item-hide">
+            <div class="form-field">
+                <div class="container">
+                    <div class="left">
+                        Enable HTTPS:
+                    </div>
+                    <div class="right">
+                        <div class="checkbox-wrapper-22">
+                            <label class="switch" for="httpsEnabled">
+                                <input type="checkbox" name="httpsEnabled" id="httpsEnabled" title="httpsEnabled"
+                                    onchange="enableHTTPS()">
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="certArea">
+                    <label for="certificate">PEM Certificate:</label>
+                    <div>
+                        <textarea name="certificate" id="certificate" rows="10" disabled="true"></textarea>
+                    </div>
+                </div>
+                <div class="certArea">
+                    <label for="certificateKey">PEM Certificate Private Key:</label>
+                    <div>
+                        <textarea name="certificateKey" id="certificateKey" rows="10" disabled="true"></textarea>
+                    </div>
+                </div>
+                <div class="center">
+                    <button type="button" onclick="saveSection('https')" class="custom-button">Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div id="customAlertBox" class="custom-alert">
+        <div class="custom-alert-content">
+            <span class="close">&times;</span>
+            <p id="alertMessage"></p>
+        </div>
+    </div>
+    <script src="./app.js"></script>
+    <script src="../assets/script.js"></script>
+    <noscript>Sorry, your browser does not support JavaScript!</noscript>
+</body>
+
+</html>

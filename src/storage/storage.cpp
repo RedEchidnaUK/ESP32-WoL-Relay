@@ -7,16 +7,78 @@ void saveConfig()
 {
     prefs.begin("wolrelay", false);
 
-    outputDebugLine("Saving apiKey");
+    outputDebug("Saving apiKey: ");
+    outputDebugLine(apiKey);
     prefs.putString("apiKey", apiKey);
-    outputDebugLine("Saving adminUser");
+    outputDebug("Saving adminUser: ");
+    outputDebugLine(adminUser);
     prefs.putString("adminUser", adminUser);
-    outputDebugLine("Saving adminPassword");
+    outputDebugLine("Saving adminPassword: ");
+    outputDebugLine(adminPassword);
     prefs.putString("adminPassword", adminPassword);
-    outputDebugLine("Saving wifiSSID");
+    outputDebug("Saving wifiSSID: ");
+    outputDebugLine(wifiSSID);
     prefs.putString("wifiSSID", wifiSSID);
-    outputDebugLine("Saving wifiPassword");
+    outputDebug("Saving wifiPassword: ");
+    outputDebugLine(wifiPassword);
     prefs.putString("wifiPassword", wifiPassword);
+    outputDebug("Saving https: ");
+    outputDebugLine(https);
+    prefs.putBool("https", https);
+
+    outputDebugLine("Saving certificates");
+
+    String tempDefaultCertificate;
+    File fp;
+    fp = LittleFS.open("/default.crt", FILE_READ);
+    if (fp)
+    {
+        outputDebugLine("Certificate file found");
+        tempDefaultCertificate = fp.readString();
+        fp.close();
+
+        if (server_cert != tempDefaultCertificate)
+        {
+            outputDebugLine("Custom certificate found, saving to LittleFS");
+            fp = LittleFS.open("/server.crt", FILE_WRITE, true);
+            outputDebugLine("Saving server.crt");
+            fp.write((const uint8_t *)server_cert.c_str(), server_cert.length());
+        }
+        else
+        {
+            outputDebugLine("Default certificate matches sent certificate, no need to save");
+        }
+    }
+    else
+    {
+        outputDebugLine("Default certificate file not found. This should never happen!");
+    }
+    fp.close();
+
+    fp = LittleFS.open("/default.key", FILE_READ);
+    if (fp)
+    {
+        outputDebugLine("Certificate file found");
+        tempDefaultCertificate = fp.readString();
+        fp.close();
+
+        if (server_key != tempDefaultCertificate)
+        {
+            outputDebugLine("Custom certificate found, saving to LittleFS");
+            fp = LittleFS.open("/server.key", FILE_WRITE, true);
+            outputDebugLine("Saving server.key");
+            fp.write((const uint8_t *)server_key.c_str(), server_key.length());
+        }
+        else
+        {
+            outputDebugLine("Default certificate matches sent certificate, no need to save");
+        }
+    }
+    else
+    {
+        outputDebugLine("Default certificate file not found. This should never happen!");
+    }
+    fp.close();
 
     outputDebugLine("Saving devices");
     for (int i = 0; i < DEVICE_COUNT; i++)
@@ -36,6 +98,9 @@ void saveConfig()
 
 void loadConfig()
 {
+
+    String certificateFile = "/default.crt";
+    String keyFile = "/default.key";
 
     prefs.begin("wolrelay", true);
 
@@ -72,6 +137,49 @@ void loadConfig()
     adminPassword = prefs.getString("adminPassword");
     outputDebugLine("Admin Password: " + adminPassword);
 
+    https = prefs.getBool("https");
+    outputDebug("HTTPS enabled: ");
+    outputDebugLine(https ? "True" : "False");
+
+    outputDebugLine("Loading certificates");
+    if (LittleFS.exists("/server.crt") && LittleFS.exists("/server.key"))
+    {
+        outputDebugLine("Custom certificates found");
+        certificateFile = "/server.crt";
+        keyFile = "/server.key";
+    }
+    else
+    {
+        outputDebugLine("Custom Certificates not found, using default certificates");
+    }
+
+    File fp;
+
+    fp = LittleFS.open(certificateFile, FILE_READ);
+    if (fp)
+    {
+        outputDebugLine("Certificate file found");
+        server_cert = fp.readString();
+    }
+    else
+    {
+        outputDebugLine("Certificate file not found, SSL not available");
+        server_cert = "";
+    }
+    fp.close();
+
+    fp = LittleFS.open(keyFile, FILE_READ);
+    if (fp)
+    {
+        server_key = fp.readString();
+        outputDebugLine("Certificate key file found");
+    }
+    else
+    {
+        outputDebugLine("Certificate key file not found, SSL not available");
+        server_key = "";
+    }
+    fp.close();
     prefs.end();
 }
 
@@ -92,6 +200,15 @@ void checkResetButton()
             prefs.begin("wolrelay", false);
             prefs.clear();
             prefs.end();
+
+            if(LittleFS.exists("/server.crt"))
+            {
+                LittleFS.remove("/server.crt");
+            }
+            if(LittleFS.exists("/server.key"))
+            {
+                LittleFS.remove("/server.key");
+            }
 
             for (size_t i = 0; i < 5; i++)
             {

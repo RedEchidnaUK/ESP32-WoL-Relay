@@ -1,10 +1,11 @@
 #include "api.h"
 
-bool checkApiKey(AsyncWebServerRequest *request)
+// bool checkApiKey(AsyncWebServerRequest *request)
+bool checkApiKey(PsychicRequest *request)
 {
     if (request->hasHeader("X-API-Key"))
     {
-        return request->getHeader("X-API-Key")->value() == apiKey;
+        return request->header("X-API-Key") == apiKey;
     }
 
     if (request->hasParam("apikey"))

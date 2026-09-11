@@ -2,19 +2,24 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
-#include <ESPAsyncWebServer.h>
+// #include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
+#include <PsychicHttpsServer.h>
 #include <WiFi.h>
 #include <ESP32Ping.h>
 #include <ArduinoJson.h>
 #include <FS.h>
 #include <LittleFS.h>
+#include <ESPmDNS.h>
 
 #define RESET_PIN 0
 #define RESET_HOLD_TIME 5000
 #define LED 2
 #define DEVICE_COUNT 10
 #define DEBUG 1
+#define TLSLOGS 0
 #define STATUS_CHECK_INTERVAL 30000
+#define MDNSNAME "esp32wolrelay"
 
 #if DEBUG==1
 #define outputDebug(x); Serial.print(x);
@@ -41,9 +46,19 @@ extern String wifiSSID;
 extern String wifiPassword;
 extern String adminUser;
 extern String adminPassword;
+extern String server_cert;
+extern String server_key;
+
 extern uint32_t lastStatusCheck;
+
 extern esp_timer_handle_t rebootTimer;
 
+extern bool app_enable_ssl;
+extern bool https;
 
 extern Preferences prefs;
-extern AsyncWebServer server;
+
+extern PsychicHttpServer httpServer;
+extern PsychicHttpsServer httpsServer;
+extern PsychicHttpServer* server;
+extern AuthenticationMiddleware basicAuth;

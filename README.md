@@ -5,6 +5,7 @@ The 'ESP32-WoL-Relay' project was born from a need to have an always on device t
 2. Be low powered
 3. Work accross broadcast domains (VLANS etc.) via a REST API
 4. Allow for easy updating of settings
+5. No external web dependencies
 
 ![ESP32 Dev board](./docs/images/ESP32.png)
 
@@ -214,3 +215,6 @@ Extensive debug messages are sent over the serial terminal using a baud rate of 
 
 # AI statement
 AI was primarily used to create/suggest blocks of code. It has not been the creator of all content and all content has been reviewed by a human. It has been used as a tool to assit with the creation of the project, just like VS Code, Platformio and various web sources etc. If you object to this, that is fine, you do not have to use the project.
+
+# Attributions
+The 'favicon' was created by Donnnno and is provided by [https://svgicons.com/icon/10081/wakeonlan](https://svgicons.com/icon/10081/wakeonlan) under the [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license

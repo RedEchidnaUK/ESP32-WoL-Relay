@@ -5,6 +5,13 @@
 #include "../api/api.h"
 #include "../network/network.h"
 
-void setupWeb();
+// enum class WebServerType
+// {
+//     HTTP,
+//     HTTPS
+// };
+
+void prepareServer();
+void startWebApp();
 void startSetupPortal();
-bool authenticateWeb(AsyncWebServerRequest *request);
+bool authenticateWeb(PsychicRequest *request);
