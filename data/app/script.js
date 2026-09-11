@@ -12,7 +12,10 @@ let close_img = document.querySelector(".close");
 
 async function loadConfig() {
     try {
-        const response = await fetch("/api/config");
+        const response = await fetch("/api/config", {
+            method: 'GET',
+            signal: AbortSignal.timeout(5_000),
+        });
         const config = await response.json();
 
         buildDeviceTable(config.devices);
@@ -31,19 +34,34 @@ async function loadConfig() {
         }
     }
     catch (error) {
-        console.error(error);
+        if (error.name === 'TimeoutError') {
+            alertbox(`<p class="error">'Network error - Unable to fetch config!'</p>`);
+        }
+        else {
+            console.log("Unknown error: " + error)
+            alertbox('Unknown error - Please try again.');
+        }
     }
 }
 
 async function generateAPIKey() {
     try {
-        const response = await fetch("/api/apikey");
+        const response = await fetch("/api/apikey", {
+            method: 'GET',
+            signal: AbortSignal.timeout(5_000),
+        });
         const newAPIKey = await response.json();
 
         document.getElementById("apiKey").value = newAPIKey.apiKey || "";
     }
     catch (error) {
-        console.error(error);
+        if (error.name === 'TimeoutError') {
+            alertbox(`<p class="error">'Network error - Unable to generate new API Key!'</p>`);
+        }
+        else {
+            console.log("Unknown error: " + error)
+            alertbox('Unknown error - Please try again.');
+        }
     }
 }
 
@@ -126,7 +144,7 @@ async function saveSection(containerId) {
                 });
             }
             // else {
-                data["httpsEnabled"] = document.getElementById("httpsEnabled").checked;
+            data["httpsEnabled"] = document.getElementById("httpsEnabled").checked;
             // }
             break;
         default:
