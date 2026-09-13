@@ -47,8 +47,8 @@ extern String wifiSSID;
 extern String wifiPassword;
 extern String adminUser;
 extern String adminPassword;
-extern String server_cert;
-extern String server_key;
+extern String serverCertificate;
+extern String serverCertificateKey;
 
 extern uint32_t lastStatusCheck;
 

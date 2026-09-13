@@ -165,10 +165,10 @@ void prepareServer()
     if (https)
     {
         outputDebugLine("HTTPS server requested");
-        if (server_cert.length() > 0 && server_key.length() > 0)
+        if (serverCertificate.length() > 0 && serverCertificateKey .length() > 0)
         {
             outputDebugLine("Server certifcates found");
-            if (checkCertificateConfiguration(server_cert, server_key) == 0)
+            if (checkCertificateConfiguration(serverCertificate, serverCertificateKey) == 0)
             {
                 outputDebugLine("Server certifcates valid");
                 app_enable_ssl = true;
@@ -186,7 +186,7 @@ void prepareServer()
             {
                 outputDebugLine("Starting HTTPS server");
                 server = &httpsServer;
-                server->setCertificate(server_cert.c_str(), server_key.c_str());
+                server->setCertificate(serverCertificate.c_str(), serverCertificateKey.c_str());
                 startHTTPSRedirectServer();
             }
             catch (const std::exception &e)
@@ -197,31 +197,31 @@ void prepareServer()
                 if (fp)
                 {
                     outputDebugLine("Certificate file found");
-                    server_cert = fp.readString();
+                    serverCertificate = fp.readString();
                 }
                 else
                 {
                     outputDebugLine("Certificate file not found, SSL not available");
-                    server_cert = "";
+                    serverCertificate = "";
                 }
                 fp.close();
 
                 File fp2 = LittleFS.open("/default.key", FILE_READ);
                 if (fp2)
                 {
-                    server_key = fp2.readString();
+                    serverCertificateKey = fp2.readString();
                     outputDebugLine("Certificate key file found");
                 }
                 else
                 {
                     outputDebugLine("Certificate key file not found, SSL not available");
-                    server_key = "";
+                    serverCertificateKey = "";
                 }
                 try
                 {
                     outputDebugLine("Starting HTTPS server with default certificates");
                     server = &httpsServer;
-                    server->setCertificate(server_cert.c_str(), server_key.c_str());
+                    server->setCertificate(serverCertificate.c_str(), serverCertificateKey.c_str());
                     startHTTPSRedirectServer();
                 }
                 catch (const std::exception &e)
@@ -422,21 +422,21 @@ void startWebApp()
 
                 if (sentCertificate.length() == 0)
                 {
-                    sentCertificate = server_cert;
+                    sentCertificate = serverCertificate;
                 }
 
                 if (sentCertificateKey.length() == 0)
                 {
-                    sentCertificateKey = server_key;
+                    sentCertificateKey = serverCertificateKey;
                 }
 
-                if (sentCertificate != server_cert || sentCertificateKey != server_key)
+                if (sentCertificate != serverCertificate || sentCertificateKey != serverCertificateKey )
                 {
                     errorCode = checkCertificateConfiguration(sentCertificate, sentCertificateKey);
                     if (errorCode == 0)
                     {
-                        server_cert = sentCertificate;
-                        server_key = sentCertificateKey;
+                        serverCertificate = sentCertificate;
+                        serverCertificateKey = sentCertificateKey;
                     }
                 }
                 
@@ -553,8 +553,8 @@ void startWebApp()
         doc["wifiPasswordMinLength"] = WIFI_PASSWORD_MIN_LENGTH;
         doc["adminUser"] = adminUser;
         doc["adminPasswordMinLength"] = ADMIN_PASSWORD_MIN_LENGTH;
-        doc["certificate"] = server_cert;
-        doc["certificateKey"] = server_key;
+        doc["certificate"] = serverCertificate;
+        doc["certificateKey"] = serverCertificateKey;
         doc["httpsEnabled"] = https;
 
         JsonArray deviceArray = doc["devices"].to<JsonArray>();
@@ -661,8 +661,8 @@ void startSetupPortal()
                     doc["adminUser"] = "admin";
                     doc["adminPassword"] = WiFi.macAddress();
                     doc["apiKey"] = apiKey;
-                    doc["certificate"] = server_cert;
-                    doc["certificateKey"] = server_key;
+                    doc["certificate"] = serverCertificate;
+                    doc["certificateKey"] = serverCertificateKey;
 
                     String json;
                     serializeJson(doc, json);

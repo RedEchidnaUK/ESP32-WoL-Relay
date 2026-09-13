@@ -7,8 +7,8 @@ String adminUser = "";
 String adminPassword = "";
 String wifiSSID = "";
 String wifiPassword = "";
-String server_cert = "";
-String server_key = "";
+String serverCertificate = "";
+String serverCertificateKey = "";
 
 uint32_t lastStatusCheck = 0;
 

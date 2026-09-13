@@ -77,9 +77,9 @@ void setup()
         outputDebugLine("An Error has occurred while mounting LittleFS");
         return;
     }
-    #if DEBUG==1
-        listDir(LittleFS, "/", 3);
-    #endif
+#if DEBUG == 1
+    listDir(LittleFS, "/", 3);
+#endif
 
     outputDebugLine("Checking for preferences");
     prefs.begin("wolrelay", false);
@@ -98,12 +98,12 @@ void setup()
         fp = LittleFS.open("/default.crt", FILE_READ);
 
         outputDebugLine("Loaded default certificate");
-        server_cert = fp.readString();
+        serverCertificate = fp.readString();
 
         fp.close();
 
         fp = LittleFS.open("/default.key", FILE_READ);
-        server_key = fp.readString();
+        serverCertificateKey = fp.readString();
         outputDebugLine("Loaded default certificate Key");
 
         fp.close();

@@ -37,12 +37,12 @@ void saveConfig()
         tempDefaultCertificate = fp.readString();
         fp.close();
 
-        if (server_cert != tempDefaultCertificate)
+        if (serverCertificate != tempDefaultCertificate)
         {
             outputDebugLine("Custom certificate found, saving to LittleFS");
             fp = LittleFS.open("/server.crt", FILE_WRITE, true);
             outputDebugLine("Saving server.crt");
-            fp.write((const uint8_t *)server_cert.c_str(), server_cert.length());
+            fp.write((const uint8_t *)serverCertificate.c_str(), serverCertificate.length());
         }
         else
         {
@@ -62,12 +62,12 @@ void saveConfig()
         tempDefaultCertificate = fp.readString();
         fp.close();
 
-        if (server_key != tempDefaultCertificate)
+        if (serverCertificateKey != tempDefaultCertificate)
         {
             outputDebugLine("Custom certificate found, saving to LittleFS");
             fp = LittleFS.open("/server.key", FILE_WRITE, true);
             outputDebugLine("Saving server.key");
-            fp.write((const uint8_t *)server_key.c_str(), server_key.length());
+            fp.write((const uint8_t *)serverCertificateKey.c_str(), serverCertificateKey.length());
         }
         else
         {
@@ -159,25 +159,25 @@ void loadConfig()
     if (fp)
     {
         outputDebugLine("Certificate file found");
-        server_cert = fp.readString();
+        serverCertificate = fp.readString();
     }
     else
     {
         outputDebugLine("Certificate file not found, SSL not available");
-        server_cert = "";
+        serverCertificate = "";
     }
     fp.close();
 
     fp = LittleFS.open(keyFile, FILE_READ);
     if (fp)
     {
-        server_key = fp.readString();
+        serverCertificateKey = fp.readString();
         outputDebugLine("Certificate key file found");
     }
     else
     {
         outputDebugLine("Certificate key file not found, SSL not available");
-        server_key = "";
+        serverCertificateKey = "";
     }
     fp.close();
     prefs.end();
