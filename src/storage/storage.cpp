@@ -13,7 +13,7 @@ void saveConfig()
     outputDebug("Saving adminUser: ");
     outputDebugLine(adminUser);
     prefs.putString("adminUser", adminUser);
-    outputDebugLine("Saving adminPassword: ");
+    outputDebug("Saving adminPassword: ");
     outputDebugLine(adminPassword);
     prefs.putString("adminPassword", adminPassword);
     outputDebug("Saving wifiSSID: ");

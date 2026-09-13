@@ -2,9 +2,21 @@
 // Global Variables
 // 
 
+const debug = false;
+const skipClientsideChecks = false;
 const alertBox = document.getElementById("customAlertBox");
 const alert_Message_container = document.getElementById("alertMessage");
 const close_img = document.querySelector(".close");
+const Errors = {
+    A: { bit: 1, message: "Invalid WiFi SSID" },
+    B: { bit: 2, message: "Invalid WiFi Password" },
+    C: { bit: 4, message: "Invalid Admin User" },
+    D: { bit: 8, message: "Invalid Admin Password" },
+    E: { bit: 16, message: "Invalid API Key" },
+    F: { bit: 32, message: "Invalid Certificate" },
+    G: { bit: 64, message: "Invalid Certificate Key" },
+    H: { bit: 128, message: "Unknown error!" }
+};
 
 // 
 // Functions
@@ -100,8 +112,6 @@ const isMACAddresslValid = (MACAddress) => {
 // 
 // Event listeners
 // 
-
-window.addEventListener("load", loadConfig);
 
 close_img.addEventListener('click', function () { alertBox.style.display = "none"; });
 

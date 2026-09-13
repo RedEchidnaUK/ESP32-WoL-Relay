@@ -4,10 +4,6 @@
 #include "./api/api.h"
 #include "./webserver/webserver.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// SETUP
-////////////////////////////////////////////////////////////////////////////////
-
 void rebootCallback(void *arg)
 {
     ESP.restart();
@@ -52,6 +48,10 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// SETUP
+////////////////////////////////////////////////////////////////////////////////
+
 void setup()
 {
 #if TLSLOGS == 0
@@ -77,7 +77,9 @@ void setup()
         outputDebugLine("An Error has occurred while mounting LittleFS");
         return;
     }
-    listDir(LittleFS, "/", 3);
+    #if DEBUG==1
+        listDir(LittleFS, "/", 3);
+    #endif
 
     outputDebugLine("Checking for preferences");
     prefs.begin("wolrelay", false);

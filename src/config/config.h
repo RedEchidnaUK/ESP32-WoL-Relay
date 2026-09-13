@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
-// #include <ESPAsyncWebServer.h>
 #include <PsychicHttp.h>
 #include <PsychicHttpsServer.h>
 #include <WiFi.h>
@@ -16,10 +15,12 @@
 #define RESET_HOLD_TIME 5000
 #define LED 2
 #define DEVICE_COUNT 10
-#define DEBUG 1
+#define DEBUG 0
 #define TLSLOGS 0
 #define STATUS_CHECK_INTERVAL 30000
-#define MDNSNAME "esp32wolrelay"
+#define MDNSNAME "esp32wolrelay"  // Do NOT put .local on the end of this!
+#define WIFI_PASSWORD_MIN_LENGTH 8
+#define ADMIN_PASSWORD_MIN_LENGTH 12
 
 #if DEBUG==1
 #define outputDebug(x); Serial.print(x);

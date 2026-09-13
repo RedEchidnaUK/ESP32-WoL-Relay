@@ -16,9 +16,12 @@ async function loadConfig() {
         });
         const config = await response.json();
 
+        document.getElementById("wifiPassword").minLength = config.wifiPasswordMinLength || 8;
         document.getElementById("adminUser").value = config.adminUser || "";
         document.getElementById("adminPassword").value = config.adminPassword || "";
+        document.getElementById("adminPassword").minLength = config.adminPasswordMinLength || 12;
         document.getElementById("apiKey").value = config.apiKey || "";
+        document.getElementById("apiKey").minLength = config.adminPasswordMinLength || 12;
         document.getElementById("certificate").value = config.certificate || "";
         document.getElementById("certificateKey").value = config.certificateKey || "";
         defaultPassword = config.adminPassword;
@@ -28,7 +31,9 @@ async function loadConfig() {
             alertbox(`<p class="error">'Network error - Unable to fetch config!'</p>`);
         }
         else {
-            console.log("Unknown error: " + error)
+            if (debug == true) {
+                console.log("Unknown error: " + error)
+            }
             alertbox('Unknown error - Please try again.');
         }
     }
@@ -124,29 +129,15 @@ async function saveSettings() {
         }
     }
 
-    let temp = 96;
-    const Errors = {
-        A: { bit: 1, message: "Invalid WiFi SSID" },
-        B: { bit: 2, message: "Invalid WiFi Password" },
-        C: { bit: 4, message: "Invalid Admin User" },
-        D: { bit: 8, message: "Invalid Admin Password" },
-        E: { bit: 16, message: "Invalid API Key" },
-        F: { bit: 32, message: "Invalid Certificate" },
-        G: { bit: 64, message: "Invalid Certificate Key" }
-    };
-
-    const activeErrorsHTML = Object.values(Errors)
-        .filter(error => temp & error.bit)
-        .map(error => `<p class="error">${error.message}</p>`)
-        .join("");
-
-    console.log(activeErrorsHTML);
+    if (skipClientsideChecks == true) {
+        valid = true;
+    }
 
     if (!valid) {
         alertbox(`<p class="error">Invalid details. Please check,</p>${alertTextAdditional}`);
         return;
     }
-    else {
+    if (debug == true) {
         console.log(JSON.stringify(data))
     }
 
@@ -170,16 +161,6 @@ async function saveSettings() {
             startCountdown();
         }
         else {
-            const Errors = {
-                A: { bit: 1, message: "Invalid WiFi SSID" },
-                B: { bit: 2, message: "Invalid WiFi Password" },
-                C: { bit: 4, message: "Invalid Admin User" },
-                D: { bit: 8, message: "Invalid Admin Password" },
-                E: { bit: 16, message: "Invalid API Key" },
-                F: { bit: 32, message: "Invalid Certificate" },
-                G: { bit: 64, message: "Invalid Certificate Key" }
-            };
-
             const activeErrorsHTML = Object.values(Errors)
                 .filter(error => result.result & error.bit)
                 .map(error => `<p class="error">${error.message}</p>`)
@@ -193,7 +174,9 @@ async function saveSettings() {
             alertbox(`<p class="error">'Network error!'</p>`);
         }
         else {
-            console.log("Unknown error: " + error)
+            if (debug == true) {
+                console.log("Unknown error: " + error)
+            }
             alertbox('Unknown error! Please try again.');
         }
     }
@@ -222,10 +205,8 @@ function enableHTTPS() {
     certKeyField.required = !certKeyField.disabled;
 
     certField.parentElement.classList.toggle('error', !certField.disabled && certField.value.length > 0 && !checkCertificateField(certField));
-    certKeyField.parentElement.classList.toggle('error', !certKeyField.disabled && certKeyField.value.length > 0 && !checkCertificateField(certKeyField));
+    certKeyField.parentElement.classList.toggle('error', !certKeyField.disabled && certKeyField.value.length > 0 && !checkCertificateField(certKeyField, true));
 }
-
-
 
 function characterWording(element) {
     let characterValue = "character"
@@ -234,3 +215,9 @@ function characterWording(element) {
     }
     return characterValue
 }
+
+// 
+// Event listeners
+// 
+
+window.addEventListener("load", loadConfig);

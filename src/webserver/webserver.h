@@ -5,12 +5,6 @@
 #include "../api/api.h"
 #include "../network/network.h"
 
-// enum class WebServerType
-// {
-//     HTTP,
-//     HTTPS
-// };
-
 void prepareServer();
 void startWebApp();
 void startSetupPortal();

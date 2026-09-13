@@ -53,8 +53,8 @@
                     <label for="wifiPassword">WiFi Password:</label>
                 </div>
                 <div class="right">
-                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32" required="true" minlength="1"></div>
-                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32" minlength="8"
+                    <div><input type="text" id="wifiSSID" name="wifiSSID" size="32" required="true"></div>
+                    <div><input type="password" id="wifiPassword" name="wifiPassword" size="32"
                             placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
                 </div>
             </div>
@@ -71,7 +71,7 @@
                 <div class="right">
                     <div><input type="text" id="adminUser" name="adminUser" size="32" required="true" maxlength="32">
                     </div>
-                    <div><input type="password" id="adminPassword" name="adminPassword" size="32" minlength="12"
+                    <div><input type="password" id="adminPassword" name="adminPassword" size="32"
                             placeholder="Set to update" maxlength="32" onkeyup="setRequired(this)"></div>
                 </div>
             </div>
@@ -86,9 +86,9 @@
                 </div>
                 <div class="right">
                     <div>
-                        <input type="text" id="apiKey" name="apiKey" size="40" required="true"
-                            placeholder="Set to update" maxlength="40">&nbsp;<button type="button"
-                            onclick="generateAPIKey()" class="custom-button-small">Generate</button>
+                        <input type="text" id="apiKey" name="apiKey" size="40" placeholder="Set to update"
+                            maxlength="40" onkeyup="setRequired(this)">&nbsp;
+                        <button type="button" onclick="generateAPIKey()" class="custom-button-small">Generate</button>
                     </div>
                 </div>
             </div>
@@ -136,8 +136,8 @@
             <p id="alertMessage"></p>
         </div>
     </div>
-    <script src="./app.js"></script>
     <script src="../assets/script.js"></script>
+    <script src="./app.js"></script>
     <noscript>Sorry, your browser does not support JavaScript!</noscript>
 </body>
 

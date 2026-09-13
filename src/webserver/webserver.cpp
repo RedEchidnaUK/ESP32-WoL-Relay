@@ -1,9 +1,8 @@
 #include "webserver.h"
 
-bool authenticateWeb(PsychicRequest *request)
-{
-    return request->authenticate(adminUser.c_str(), adminPassword.c_str());
-}
+////////////////////////////////////////////////////////////////////////////////
+// INTERNAL FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 bool isValidIPAddress(const String &ip)
 {
@@ -36,9 +35,130 @@ bool isValidMACAddress(const String &mac)
     return true;
 }
 
+int checkWifiConfiguration(const String &wifiSSID, const String &wifiPassword)
+{
+    int errorCode = 0;
+    if (wifiSSID.length() == 0)
+    {
+        outputDebugLine("Invalid WiFi SSID");
+        errorCode += 1;
+    }
+
+    if (wifiPassword.length() < WIFI_PASSWORD_MIN_LENGTH)
+    {
+        outputDebugLine("Invalid WiFi Password");
+        errorCode += 2;
+    }
+
+    return errorCode;
+}
+
+int checkAdminConfiguration(const String &adminUser, const String &adminPassword)
+{
+    int errorCode = 0;
+    if (adminUser.length() == 0)
+    {
+        outputDebugLine("Invalid Admin User");
+        errorCode += 4;
+    }
+
+    if (adminPassword.length() < ADMIN_PASSWORD_MIN_LENGTH)
+    {
+        outputDebugLine("Invalid Admin Password");
+        errorCode += 8;
+    }
+
+    return errorCode;
+}
+
+int checkAPIKeyConfiguration(const String &apiKey)
+{
+    int errorCode = 0;
+
+    if (apiKey.length() < ADMIN_PASSWORD_MIN_LENGTH)
+    {
+        outputDebugLine("Invalid API Key");
+        errorCode += 16;
+    }
+
+    return errorCode;
+}
+
+int checkCertificateConfiguration(String certificate, String certificateKey)
+{
+    outputDebugLine("Validating certificates");
+    outputDebugLine("Certificate: ");
+    outputDebugLine(certificate);
+    outputDebugLine("Certificate Key: ");
+    outputDebugLine(certificateKey);
+
+    mbedtls_x509_crt certChain;
+    mbedtls_pk_context key;
+
+    mbedtls_x509_crt_init(&certChain);
+    mbedtls_pk_init(&key);
+
+    int certCode = 0;
+    int errorCode = 0;
+
+    certCode = mbedtls_x509_crt_parse(&certChain, (const unsigned char *)certificate.c_str(), certificate.length() + 1);
+
+    outputDebug("Certificate check code:");
+    outputDebugLine(certCode);
+
+    if (certCode != 0)
+        errorCode += 32;
+
+    certCode = mbedtls_pk_parse_key(&key, (const unsigned char *)certificateKey.c_str(), certificateKey.length() + 1, nullptr, 0);
+
+    outputDebug("Certificate key check code: ");
+    outputDebugLine(certCode);
+
+    if (certCode != 0)
+        errorCode += 64;
+
+    if (errorCode == 0)
+    {
+        certCode = mbedtls_pk_check_pair(&certChain.pk, &key);
+        outputDebug("Certificate pair check code: ");
+        outputDebugLine(certCode);
+        if (certCode != 0)
+            errorCode = 96;
+    }
+
+    return errorCode;
+}
+
+bool startHTTPSRedirectServer()
+{
+    try
+    {
+        PsychicHttpServer *redirectServer = new PsychicHttpServer();
+        redirectServer->config.ctrl_port = 20424; // just a random port different from the default one
+        redirectServer->config.stack_size = 4096; // we dont need a large stack size for this.
+        redirectServer->onNotFound([](PsychicRequest *request, PsychicResponse *response)
+                                   {
+                                    String url = "https://";
+                                    url += request->host();
+                                    url += request->url();
+                                    return response->redirect(url.c_str()); });
+        redirectServer->start();
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        return false;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-// WEB SERVER
+// EXTERNAL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+bool authenticateWeb(PsychicRequest *request)
+{
+    return request->authenticate(adminUser.c_str(), adminPassword.c_str());
+}
 
 void prepareServer()
 {
@@ -48,7 +168,7 @@ void prepareServer()
         if (server_cert.length() > 0 && server_key.length() > 0)
         {
             outputDebugLine("Server certifcates found");
-            if (validateCertificates(server_cert, server_key) == 0)
+            if (checkCertificateConfiguration(server_cert, server_key) == 0)
             {
                 outputDebugLine("Server certifcates valid");
                 app_enable_ssl = true;
@@ -67,17 +187,7 @@ void prepareServer()
                 outputDebugLine("Starting HTTPS server");
                 server = &httpsServer;
                 server->setCertificate(server_cert.c_str(), server_key.c_str());
-                // this creates a 2nd server listening on port 80 and redirects all requests HTTPS
-                PsychicHttpServer *redirectServer = new PsychicHttpServer();
-                redirectServer->config.ctrl_port = 20424; // just a random port different from the default one
-                redirectServer->config.stack_size = 4096; // we dont need a large stack size for this.
-                redirectServer->onNotFound([](PsychicRequest *request, PsychicResponse *response)
-                                           {
-                        String url = "https://";
-                        url += request->host();
-                        url += request->url();
-                        return response->redirect(url.c_str()); });
-                redirectServer->start();
+                startHTTPSRedirectServer();
             }
             catch (const std::exception &e)
             {
@@ -112,17 +222,7 @@ void prepareServer()
                     outputDebugLine("Starting HTTPS server with default certificates");
                     server = &httpsServer;
                     server->setCertificate(server_cert.c_str(), server_key.c_str());
-                    // this creates a 2nd server listening on port 80 and redirects all requests HTTPS
-                    PsychicHttpServer *redirectServer = new PsychicHttpServer();
-                    redirectServer->config.ctrl_port = 20424; // just a random port different from the default one
-                    redirectServer->config.stack_size = 4096; // we dont need a large stack size for this.
-                    redirectServer->onNotFound([](PsychicRequest *request, PsychicResponse *response)
-                                               {
-                        String url = "https://";
-                        url += request->host();
-                        url += request->url();
-                        return response->redirect(url.c_str()); });
-                    redirectServer->start();
+                    startHTTPSRedirectServer();
                 }
                 catch (const std::exception &e)
                 {
@@ -145,17 +245,17 @@ void prepareServer()
     }
 
     outputDebugLine("Starting mDNS");
-    if (!MDNS.begin(MDNSNAME)) // Do NOT put .local on the end of this!
+    if (!MDNS.begin(MDNSNAME))
     {
-        outputDebugLine("Error starting mDNS");
-        while (1)
-        {
-            delay(1000);
-        }
+        outputDebugLine("Error starting mDNS. mDNS will be unavailable");
     }
 
     MDNS.addService("_http", "_tcp", 80);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// WEB SERVER
+////////////////////////////////////////////////////////////////////////////////
 
 void startWebApp()
 {
@@ -166,7 +266,7 @@ void startWebApp()
     server->on("/save", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
                {
             int responseStatusCode = 200;
-            int saved = 0;
+            int errorCode = 0;
             String body = request->body();
             JsonDocument doc;
 
@@ -176,8 +276,8 @@ void startWebApp()
 
             if (tab == "devices")
             {
-                JsonDocument errorsDoc;
-                JsonArray errors = errorsDoc["errors"].to<JsonArray>();
+                JsonDocument devicesDoc;
+                JsonArray devicesArray = devicesDoc["devices"].to<JsonArray>();
                 for (int i = 0; i < DEVICE_COUNT; ++i)
                 {
                     outputDebug("Processing row: ");
@@ -185,11 +285,11 @@ void startWebApp()
 
                     String row = String(i);
 
-                    String name = doc["devices"][i]["name"].as<String>();
-                    String mac = doc["devices"][i]["mac"].as<String>();
-                    String ip = doc["devices"][i]["ip"].as<String>();
-                    String bc = doc["devices"][i]["bc"].as<String>();
-                    bool en = doc["devices"][i]["en"].as<bool>();
+                    String name = doc["devices"][i]["name"];
+                    String mac = doc["devices"][i]["mac"];
+                    String ip = doc["devices"][i]["ip"];
+                    String bc = doc["devices"][i]["bc"];
+                    bool en = doc["devices"][i]["en"];
 
                     outputDebug("name: ");
                     outputDebugLine(name);
@@ -202,130 +302,167 @@ void startWebApp()
                     outputDebug("en: ");
                     outputDebugLine(en);
 
-                    
+                    JsonObject deviceItem = devicesDoc["result"].add<JsonObject>();
                     if ((!isValidMACAddress(mac) || !isValidIPAddress(ip) || !isValidIPAddress(bc)) && !(mac.isEmpty() && ip.isEmpty() && bc.isEmpty()))
                     {
                         outputDebug("Error row: ");
                         outputDebugLine(i+1);
-                        JsonObject error = errorsDoc["errors"].add<JsonObject>();
-                        error["row"] = i + 1;
-                        error["message"] = "Error - Invalid configuration";
-                        continue;
+                        
+                        if(!isValidMACAddress(mac))
+                        {
+                            outputDebugLine("Invalid MAC address");
+                            responseStatusCode = 400;
+                            errorCode += 1;
+                        }
+                        if(!isValidIPAddress(ip)){
+                            outputDebugLine("Invalid IP address");
+                            responseStatusCode = 400;
+                            errorCode += 2;
+                        }
+                        if(!isValidIPAddress(bc)){
+                            outputDebugLine("Invalid BC address");
+                            responseStatusCode = 400;
+                            errorCode += 4;
+                        }
                     }
+                    else
+                    {
+                        outputDebug("Setting row: ");
+                        outputDebugLine(i);
 
-                    outputDebug("Setting row: ");
-                    outputDebugLine(i);
+                        auto &device = devices[i];
 
-                    auto &device = devices[i];
-
-                    device.name = name;
-                    device.mac = mac;
-                    device.ip = ip;
-                    device.broadcast = bc;
-                    device.enabled = en;
-
-                    saved++;
+                        device.name = name;
+                        device.mac = mac;
+                        device.ip = ip;
+                        device.broadcast = bc;
+                        device.enabled = en;
+                    }
+                    outputDebug("Final errorCode: ");
+                    outputDebugLine(errorCode);
+                    deviceItem["result"] = errorCode;
+                    errorCode = 0;
                 }
-                outputDebugLine(errorsDoc.as<String>());
                 doc.clear();
-                doc["errors"] = errorsDoc["errors"];
-                doc["saved"] = saved;
-                doc["result"] = "Saved";
+                doc["devices"] = devicesDoc["result"];
             }
             else if (tab == "wifi")
             {
-                String sentWifiSSID = doc["wifiSSID"].as<String>();
-                String sentWifiPassword = doc["wifiPassword"].as<String>();
-                doc.clear();
+                String sentWifiSSID = doc["wifiSSID"] | "";
+                String sentWifiPassword = doc["wifiPassword"] | "";
                 outputDebugLine("Sent WiFi SSID: " + sentWifiSSID);
                 outputDebugLine("Sent WiFi Password: " + sentWifiPassword);
 
-                if (!sentWifiSSID.isEmpty() && (sentWifiSSID != wifiSSID))
+                if(sentWifiPassword.length() == 0)
+                {
+                    sentWifiPassword = wifiPassword;
+                }
+
+                errorCode = checkWifiConfiguration(sentWifiSSID, sentWifiPassword);
+
+                if (errorCode == 0)
                 {
                     wifiSSID = sentWifiSSID;
-                }
-                if (!sentWifiPassword.isEmpty() && (sentWifiPassword != wifiPassword))
-                {
                     wifiPassword = sentWifiPassword;
                 }
-                doc["result"] = "Saved";
+                doc.clear();
+                doc["result"] = errorCode;
             }
             else if (tab == "admin")
             {
-                String sentAdminUser = doc["adminUser"].as<String>();
-                String sentAdminPassword = doc["adminPassword"].as<String>();
-                doc.clear();
+                String sentAdminUser = doc["adminUser"] | "";
+                String sentAdminPassword = doc["adminPassword"] | "";
+
                 outputDebugLine("Sent Admin User: " + sentAdminUser);
                 outputDebugLine("Sent Admin Password: " + sentAdminPassword);
 
-                if (!sentAdminUser.isEmpty() && (sentAdminUser != adminUser))
+                if(sentAdminPassword.length() == 0)
+                {
+                    sentAdminPassword = adminPassword;
+                }
+
+                errorCode = checkWifiConfiguration(sentAdminUser, sentAdminPassword);
+
+                if (errorCode == 0)
                 {
                     adminUser = sentAdminUser;
-                }
-                if (!sentAdminPassword.isEmpty() && (sentAdminPassword != adminPassword))
-                {
                     adminPassword = sentAdminPassword;
                 }
-                doc["result"] = "Saved";
+
+                doc.clear();
+                doc["result"] = errorCode;
             }
             else if (tab == "api")
             {
-                String sentApiKey = doc["apiKey"].as<String>();
-                doc.clear();
-                if (!sentApiKey.isEmpty() && (sentApiKey != apiKey))
+                String sentApiKey = doc["apiKey"] | "";
+
+                if (sentApiKey.length() == 0)
+                {
+                    sentApiKey = apiKey;
+                }
+                errorCode = checkAPIKeyConfiguration(sentApiKey);
+
+                if (errorCode == 0)
                 {
                     apiKey = sentApiKey;
                 }
-                doc["result"] = "Saved";
+
+                doc.clear();
+                doc["result"] = errorCode;
             }
             else if (tab == "https")
             {
-                String sentCertificate = doc["certificate"].as<String>();
-                String sentCertificateKey = doc["certificateKey"].as<String>();
-                bool sentHttps = doc["httpsEnabled"].as<bool>();
+                String sentCertificate = doc["certificate"] | "";
+                String sentCertificateKey = doc["certificateKey"] | "";
+                bool sentHttps = doc["httpsEnabled"] | false;
                 doc.clear();
                 outputDebugLine("Sent HTTPS Enabled: " + String(sentHttps));
                 outputDebugLine("Sent Certificate: " + sentCertificate);
                 outputDebugLine("Sent Certificate Key: " + sentCertificateKey);
 
+                if (sentCertificate.length() == 0)
+                {
+                    sentCertificate = server_cert;
+                }
+
+                if (sentCertificateKey.length() == 0)
+                {
+                    sentCertificateKey = server_key;
+                }
+
                 if (sentCertificate != server_cert || sentCertificateKey != server_key)
                 {
-                    outputDebugLine("Validating certificates");
-                    if (validateCertificates(sentCertificate, sentCertificateKey) == 0)
+                    errorCode = checkCertificateConfiguration(sentCertificate, sentCertificateKey);
+                    if (errorCode == 0)
                     {
-                        outputDebugLine("Certificates valid");
-                        https = sentHttps;
                         server_cert = sentCertificate;
                         server_key = sentCertificateKey;
-                        doc["result"] = "Saved";
-                    }
-                    else
-                    {
-                        outputDebugLine("Certificates invalid");
-                        doc["result"] = "Error - Invalid certificate(s)!";
-                        responseStatusCode = 400;
                     }
                 }
-                else
-                {
-                    https = sentHttps;
-                    doc["result"] = "Saved";
-                }
+                
+                https = sentHttps;
+                doc["result"] = errorCode;
             }
             else
             {
                 doc.clear();
-                responseStatusCode = 500;
-                doc["result"] = "Error - Unknown!";
+                doc["result"] = 128;
             }
+            
+            if(errorCode == 0){
+                outputDebugLine("Saving config")
+                saveConfig();
+            }
+            else
+            {
+                responseStatusCode = 400;
+            }
+
             body.clear();
             serializeJson(doc, body);
-            outputDebugLine("Returned JSON: " + body);
-
-            saveConfig();
             
             return response->send(responseStatusCode, "application/json", body.c_str()); })
-        ->addMiddleware(&basicAuth);
+    ->addMiddleware(&basicAuth);
 
     // GET DEVICE STATUS
 
@@ -333,7 +470,7 @@ void startWebApp()
                {
         JsonDocument doc;
         String json;
-        if (!checkApiKey(request))
+        if (!checkApiKeyIsValid(request))
         {
             doc["error"] = "Invalid credentials";
             serializeJson(doc, json);
@@ -380,7 +517,7 @@ void startWebApp()
                {
         JsonDocument doc;
         String json;
-        if (!checkApiKey(request))
+        if (!checkApiKeyIsValid(request))
         {
             doc["error"] = "Invalid credentials";
             serializeJson(doc, json);
@@ -405,15 +542,17 @@ void startWebApp()
 
         return response->send(200, "application/json", json.c_str()); });
 
-    // // GET CONFIG
+    // GET CONFIG
 
     server->on("/api/config", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
                {
 
         JsonDocument doc;
 
+        doc["wifiSSID"] = wifiSSID;
+        doc["wifiPasswordMinLength"] = WIFI_PASSWORD_MIN_LENGTH;
         doc["adminUser"] = adminUser;
-        doc["wifissid"] = wifiSSID;
+        doc["adminPasswordMinLength"] = ADMIN_PASSWORD_MIN_LENGTH;
         doc["certificate"] = server_cert;
         doc["certificateKey"] = server_key;
         doc["httpsEnabled"] = https;
@@ -439,26 +578,13 @@ void startWebApp()
         return response->send(200, "application/json", json.c_str()); })
         ->addMiddleware(&basicAuth);
 
-    server->on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
-               {
-
-        JsonDocument doc;
-
-        doc["apiKey"] = generateApiKey();
-
-        String json;
-        serializeJson(doc, json);
-
-        return response->send(200, "application/json", json.c_str()); })
-        ->addMiddleware(&basicAuth);
-
     // POST WAKE
 
     server->on("/api/wake", HTTP_POST, [](PsychicRequest *request, PsychicResponse *response)
                {
         JsonDocument doc;
         String json;
-        if (!checkApiKey(request))
+        if (!checkApiKeyIsValid(request))
         {
             doc["error"] = "Invalid credentials";
             serializeJson(doc, json);
@@ -558,8 +684,8 @@ void startSetupPortal()
                     adminPassword = doc["adminPassword"] | "";
                     apiKey = doc["apiKey"] | "";
                     https = doc["httpsEnabled"] | false;
-                    String sentServer_cert = doc["certificate"] | "";
-                    String sentServer_key = doc["certificateKey"] | "";
+                    String sentCertificate = doc["certificate"] | "";
+                    String sentCertificateKey = doc["certificateKey"] | "";
 
                     outputDebugLine("Sent JSON: ");
                     outputDebugLine(body);
@@ -567,60 +693,16 @@ void startSetupPortal()
                     doc.clear();
                     body.clear();
 
-                    if (wifiSSID.length() == 0 || wifiPassword.length() < 8 || adminUser.length() == 0 || adminPassword.length() < 12 || apiKey.length() == 0)
+                    if (wifiSSID.length() == 0 || wifiPassword.length() < WIFI_PASSWORD_MIN_LENGTH || adminUser.length() == 0 || adminPassword.length() < ADMIN_PASSWORD_MIN_LENGTH || apiKey.length() == 0)
                     {
-                        if (wifiSSID.length() == 0)
-                        {
-                            outputDebugLine("Invalid WiFi SSID");
-                            errorCode += 1;
-                        }
-                        if (wifiPassword.length() < 8)
-                        {
-                            outputDebugLine("Invalid WiFi password");
-                            errorCode += 2;
-                        }
-                        if (adminUser.length() == 0)
-                        {
-                            outputDebugLine("Invalid Admin User");
-                            errorCode += 4;
-                        }
-                        if (adminPassword.length() < 12)
-                        {
-                            outputDebugLine("Invalid Admin Password");
-                            errorCode += 8;
-                        }
-                        if (apiKey.length() == 0)
-                        {
-                            outputDebugLine("Invalid API key");
-                            errorCode += 16;
-                        }
+                        errorCode += checkWifiConfiguration(wifiSSID, wifiPassword);
+                        errorCode += checkAdminConfiguration(adminUser, adminPassword);
+                        errorCode += checkAPIKeyConfiguration(apiKey);
                     }
 
-                    if ((sentServer_cert.length() > 0 || sentServer_key.length() > 0))
+                    if ((sentCertificate.length() > 0 || sentCertificateKey.length() > 0))
                     {
-                        switch (validateCertificates(sentServer_cert, sentServer_key))
-                        {
-                        case 0:
-                            server_cert = sentServer_cert;
-                            server_key = sentServer_key;
-                            break;
-                        case 1:
-                            outputDebugLine("Invalid certificate sent");
-                            errorCode += 32;
-                            break;
-                        case 2:
-                            outputDebugLine("Invalid certificate key sent");
-                            errorCode += 64;
-                            break;
-                        case 3:
-                            outputDebugLine("Invalid certificates sent");
-                            errorCode += 96;
-                            break;
-                        default:
-                            outputDebugLine("Unknown certificate error");
-                            errorCode += 96;
-                            break;
-                        }
+                        errorCode += checkCertificateConfiguration(sentCertificate, sentCertificateKey);
                     }
 
                 if(errorCode == 0)
@@ -640,17 +722,6 @@ void startSetupPortal()
                 doc["result"] = errorCode;
                 serializeJson(doc,body); 
                 return response->send(responseStatusCode, "application/json", body.c_str()); });
-
-    server->on("/api/apikey", HTTP_GET, [](PsychicRequest *request, PsychicResponse *response)
-               {
-        JsonDocument doc;
-
-        doc["apiKey"] = generateApiKey();
-
-        String json;
-        serializeJson(doc, json);
-
-        return response->send(200, "application/json", json.c_str()); });
 
     server->begin();
 }

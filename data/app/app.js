@@ -12,8 +12,11 @@ async function loadConfig() {
 
         buildDeviceTable(config.devices);
 
+        document.getElementById("wifiSSID").value = config.wifiSSID || "";
+        document.getElementById("wifiPassword").minLength = config.wifiPasswordMinLength || 8;
         document.getElementById("adminUser").value = config.adminUser || "";
-        document.getElementById("wifiSSID").value = config.wifissid || "";
+        document.getElementById("adminPassword").minLength = config.adminPasswordMinLength || 12;
+        document.getElementById("apiKey").minLength = config.adminPasswordMinLength || 12;
         document.getElementById("certificate").value = config.certificate || "";
         document.getElementById("certificateKey").value = config.certificateKey || "";
 
@@ -30,7 +33,9 @@ async function loadConfig() {
             alertbox(`<p class="error">'Network error - Unable to fetch config!'</p>`);
         }
         else {
-            console.log("Unknown error: " + error)
+            if (debug == true) {
+                console.log("Unknown error: " + error)
+            }
             alertbox('Unknown error - Please try again.');
         }
     }
@@ -93,7 +98,6 @@ async function saveSection(containerId) {
             break;
         case "https":
             if (document.getElementById("httpsEnabled").checked) {
-                // data["httpsEnabled"] = true;
                 container.querySelectorAll(".certArea textarea").forEach(field => {
 
                     const value = field.value.trim();
@@ -114,9 +118,7 @@ async function saveSection(containerId) {
                     }
                 });
             }
-            // else {
             data["httpsEnabled"] = document.getElementById("httpsEnabled").checked;
-            // }
             break;
         default:
             container.querySelectorAll('input').forEach(element => {
@@ -131,54 +133,85 @@ async function saveSection(containerId) {
             });
     }
 
+    if (skipClientsideChecks == true) {
+        valid = true;
+    }    
+
     if (!valid) {
         alertbox(`<p class="error">Please check all required fields.</p>${alertTextAdditional}`);
         return;
     }
-    else {
+    if (debug == true) {
         console.log(JSON.stringify(data))
     }
 
     const tab = document.querySelector(`button[onclick="opensetting('${containerId}')"]`);
     const tabName = tab?.textContent.trim();
 
-    const response = await fetch('/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
+    try {
+        const response = await fetch('/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            signal: AbortSignal.timeout(5_000),
+        });
 
-    const json = await response.json();
-    console.log(json);
+        const jsonData = await response.json();
 
-    if (response.status == 200) {
-        let alertText = "";
-        if (containerId === "devices" && json.errors && json.errors.length > 0) {
+        if (debug == true) {
+            console.log(JSON.stringify(jsonData));
+        }
 
-            if (json.saved > 0) {
-                alertText += `<p class="success">Device Settings: Saved ${json.saved} device(s)<br>`;
-            }
-            else {
-                alertText += `<p class="error">Device Settings: Saved ${json.saved} device(s)<br>`;
-            }
-
-            if (json.errors.length > 0) {
-                alertText += `<p class="error">` +
-                    json.errors
-                        .map(e => `Device ${e.row}: Skipped - Invalid configuration`)
-                        .join("<br>") + `</p>`;
-            }
-            else {
-                alertText = `<p>${tabName}: ${json.result}</p>`;
-            }
-            alertbox(alertText);
+        let activeErrorsHTML = "";
+        if (response.status == 200) {
+            alertbox(`<p class="success">${tabName}: Saved`);
         }
         else {
-            alertbox(`<p class="success">${tabName}: ${json.result}</p>`);
+            if (containerId === "devices") {
+                const deviceErrors = {
+                    A: { bit: 1, message: "Invalid MAC address" },
+                    B: { bit: 2, message: "Invalid IP address" },
+                    C: { bit: 4, message: "Invalid Broadcast address" },
+                };
+
+                let saved = 0;
+
+                jsonData.devices.forEach((device, index) => {
+                    if (device.result === 0) {
+                        saved++;
+                        return;
+                    }
+
+                    const messages = Object.values(deviceErrors)
+                        .filter(error => device.result & error.bit)
+                        .map(error => error.message)
+                        .join(", ");
+
+                    activeErrorsHTML += `<p class="error">Device ${index + 1}: ${messages}</p>`;
+                });
+
+                alertbox(`<p class="success">${tabName}: Saved ${saved} devices</p>${activeErrorsHTML}`);
+            }
+            else {
+                activeErrorsHTML = Object.values(Errors)
+                    .filter(error => jsonData.result & error.bit)
+                    .map(error => `<p class="error">${error.message}</p>`)
+                    .join("");
+
+                alertbox(`<p class="error">Error!</p>${activeErrorsHTML}`);
+            }
         }
     }
-    else {
-        alertbox(`<p class="error">${tabName}: ${json.result}</p>`);
+    catch (error) {
+        if (error.name === 'TimeoutError') {
+            alertbox(`<p class="error">'Network error!'</p>`);
+        }
+        else {
+            if (debug == true) {
+                console.log("Unknown error: " + error)
+            }
+            alertbox('Unknown error! Please try again.');
+        }
     }
 }
 
@@ -331,3 +364,9 @@ function enableHTTPS() {
         certKeyField.parentElement.classList.add('error');
     }
 }
+
+// 
+// Event listeners
+// 
+
+window.addEventListener("load", loadConfig);
