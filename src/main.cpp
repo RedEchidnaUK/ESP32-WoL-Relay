@@ -113,7 +113,6 @@ void setup()
         WiFi.softAP("ESP32 WoL Relay");
         outputDebug("Started AP WiFi at IP: ");
         outputDebugLine(WiFi.softAPIP());
-        https = false;
         prepareServer();
         startSetupPortal();
     }
@@ -148,7 +147,6 @@ void setup()
             WiFi.begin();
             outputDebug("Started AP WiFi at IP: ");
             outputDebugLine(WiFi.softAPIP());
-            https = false;
             prepareServer();
             startSetupPortal();
         }
