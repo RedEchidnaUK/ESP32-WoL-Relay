@@ -6,17 +6,17 @@ WakeOnLan wol(udp);
 
 bool sendWOL(int id)
 {
-    if (!devices[id].enabled)
+    if (!devicesSnapshot[id].enabled)
         return false;
 
     IPAddress broadcastIP;
 
-    if (!broadcastIP.fromString(devices[id].broadcast))
+    if (!broadcastIP.fromString(devicesSnapshot[id].broadcast))
         return false;
 
     wol.setBroadcastAddress(broadcastIP);
 
-    wol.sendMagicPacket(devices[id].mac.c_str());
+    wol.sendMagicPacket(devicesSnapshot[id].mac.c_str());
 
     return true;
 }
@@ -37,16 +37,16 @@ wl_status_t connectWifi()
     return static_cast<wl_status_t>(WiFi.waitForConnectResult());
 }
 
-bool pingHost(String ip)
+bool isPortOpen(const char *host, uint16_t port, uint32_t timeoutMs)
 {
-    IPAddress remote_ip;
+    WiFiClient client;
 
-    if (Ping.ping(remote_ip.fromString(ip), 1))
+    bool result = client.connect(host, port, timeoutMs);
+
+    if (result)
     {
-        return true;
+        client.stop();
     }
-    else
-    {
-        return false;
-    }
+
+    return result;
 }

@@ -1,6 +1,7 @@
 #include "config.h"
 
 Device devices[DEVICE_COUNT];
+Device devicesSnapshot[DEVICE_COUNT];
 
 String apiKey = "";
 String adminUser = "";
@@ -9,6 +10,8 @@ String wifiSSID = "";
 String wifiPassword = "";
 String serverCertificate = "";
 String serverCertificateKey = "";
+
+SemaphoreHandle_t deviceMutex;
 
 uint32_t lastStatusCheck = 0;
 

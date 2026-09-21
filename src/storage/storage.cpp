@@ -85,11 +85,12 @@ void saveConfig()
     {
         String p = "d" + String(i);
 
-        prefs.putBool((p + "e").c_str(), devices[i].enabled);
-        prefs.putString((p + "n").c_str(), devices[i].name);
-        prefs.putString((p + "m").c_str(), devices[i].mac);
-        prefs.putString((p + "i").c_str(), devices[i].ip);
-        prefs.putString((p + "b").c_str(), devices[i].broadcast);
+        prefs.putBool((p + "e").c_str(), devicesSnapshot[i].enabled);
+        prefs.putString((p + "n").c_str(), devicesSnapshot[i].name);
+        prefs.putString((p + "m").c_str(), devicesSnapshot[i].mac);
+        prefs.putString((p + "i").c_str(), devicesSnapshot[i].ip);
+        prefs.putString((p + "b").c_str(), devicesSnapshot[i].broadcast);
+        prefs.putInt((p + "p").c_str(), devicesSnapshot[i].port);
     }
 
     prefs.end();
@@ -107,25 +108,31 @@ void loadConfig()
     apiKey = prefs.getString("apiKey", "");
     outputDebugLine("APIKey: " + apiKey);
 
+    xSemaphoreTake(deviceMutex, portMAX_DELAY);
+
     for (int i = 0; i < DEVICE_COUNT; i++)
     {
         String p = "d" + String(i);
 
-        devices[i].enabled =
-            prefs.getBool((p + "e").c_str(), false);
+        devices[i].enabled = prefs.getBool((p + "e").c_str(), false);
+        devicesSnapshot[i].enabled = prefs.getBool((p + "e").c_str(), false);
 
-        devices[i].name =
-            prefs.getString((p + "n").c_str(), "");
+        devices[i].name = prefs.getString((p + "n").c_str(), "");
+        devicesSnapshot[i].name = prefs.getString((p + "n").c_str(), "");
 
-        devices[i].mac =
-            prefs.getString((p + "m").c_str(), "");
+        devices[i].mac = prefs.getString((p + "m").c_str(), "");
+        devicesSnapshot[i].mac = prefs.getString((p + "m").c_str(), "");
 
-        devices[i].ip =
-            prefs.getString((p + "i").c_str(), "");
+        devices[i].ip = prefs.getString((p + "i").c_str(), "");
+        devicesSnapshot[i].ip = prefs.getString((p + "i").c_str(), "");
 
-        devices[i].broadcast =
-            prefs.getString((p + "b").c_str(), "");
+        devices[i].broadcast = prefs.getString((p + "b").c_str(), "");
+        devicesSnapshot[i].broadcast = prefs.getString((p + "b").c_str(), "");
+
+        devices[i].port = prefs.getInt((p + "p").c_str(), 0);
+        devicesSnapshot[i].port = prefs.getInt((p + "p").c_str(), 0);
     }
+    xSemaphoreGive(deviceMutex);
 
     wifiSSID = prefs.getString("wifiSSID", "");
     outputDebugLine("SSID: " + wifiSSID);
@@ -201,11 +208,11 @@ void checkResetButton()
             prefs.clear();
             prefs.end();
 
-            if(LittleFS.exists("/server.crt"))
+            if (LittleFS.exists("/server.crt"))
             {
                 LittleFS.remove("/server.crt");
             }
-            if(LittleFS.exists("/server.key"))
+            if (LittleFS.exists("/server.key"))
             {
                 LittleFS.remove("/server.key");
             }
@@ -225,20 +232,5 @@ void checkResetButton()
     else
     {
         buttonPressed = false;
-    }
-}
-
-void updateDeviceStatus()
-{
-    outputDebugLine("Updating device status");
-
-    for (int i = 0; i < DEVICE_COUNT; i++)
-    {
-        devices[i].online = false;
-
-        if (!devices[i].enabled)
-            continue;
-
-        devices[i].online = pingHost(devices[i].ip);
     }
 }

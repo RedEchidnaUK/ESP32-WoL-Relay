@@ -8,4 +8,3 @@ extern bool buttonPressed;
 void saveConfig();
 void loadConfig();
 void checkResetButton();
-void updateDeviceStatus();

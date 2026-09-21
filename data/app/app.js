@@ -9,8 +9,10 @@ async function loadConfig() {
             signal: AbortSignal.timeout(5_000),
         });
         const config = await response.json();
+        if (debug == true) {
+            console.log(JSON.stringify(config))
+        }
 
-        buildDeviceTable(config.devices);
 
         document.getElementById("wifiSSID").value = config.wifiSSID || "";
         document.getElementById("wifiPassword").minLength = config.wifiPasswordMinLength || 8;
@@ -19,6 +21,9 @@ async function loadConfig() {
         document.getElementById("apiKey").minLength = config.adminPasswordMinLength || 12;
         document.getElementById("certificate").value = config.certificate || "";
         document.getElementById("certificateKey").value = config.certificateKey || "";
+        tcpPortMax = config.tcpPortMax || 0;
+
+        buildDeviceTable(config.devices);
 
         if (config.httpsEnabled) {
             document.getElementById("certificate").disabled = false;
@@ -72,9 +77,11 @@ async function saveSection(containerId) {
                         let value =
                             control.type === 'checkbox'
                                 ? control.checked
-                                : control.name === 'name'
+                                : control.name === `name${index}`
                                     ? control.value.trim()
-                                    : control.value.toUpperCase();
+                                    : control.name === `port${index}`
+                                        ? Number(control.value)
+                                        : control.value.toUpperCase();
 
                         device[control.name.replace(/\d+$/, '')] = value;
                     });
@@ -85,9 +92,11 @@ async function saveSection(containerId) {
                         let value =
                             control.type === 'checkbox'
                                 ? control.checked
-                                : control.name === 'name'
+                                : control.name === `name${index}`
                                     ? control.value.trim()
-                                    : control.value.toUpperCase();
+                                    : control.name === `port${index}`
+                                        ? Number(control.value)
+                                        : control.value.toUpperCase();
 
                         device[control.name.replace(/\d+$/, '')] = value;
                     });
@@ -135,7 +144,7 @@ async function saveSection(containerId) {
 
     if (skipClientsideChecks == true) {
         valid = true;
-    }    
+    }
 
     if (!valid) {
         alertbox(`<p class="error">Please check all required fields.</p>${alertTextAdditional}`);
@@ -172,6 +181,7 @@ async function saveSection(containerId) {
                     A: { bit: 1, message: "Invalid MAC address" },
                     B: { bit: 2, message: "Invalid IP address" },
                     C: { bit: 4, message: "Invalid Broadcast address" },
+                    D: { bit: 8, message: "Invalid Port number" },
                 };
 
                 let saved = 0;
@@ -215,6 +225,49 @@ async function saveSection(containerId) {
     }
 }
 
+async function refreshStatusIndicator() {
+    try {
+        const response = await fetch('/api/devices', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(5_000),
+        });
+
+        const jsonData = await response.json();
+
+        if (debug == true) {
+            console.log(JSON.stringify(jsonData));
+        }
+
+
+        jsonData.devices.forEach((device) => {
+            if(device.online && document.getElementById(`en${device.id -1}`).checked)
+            {
+                document.getElementById(`on${device.id -1}`).classList.add('status-green');
+                document.getElementById(`on${device.id -1}`).classList.remove('status-gray');
+                document.getElementById(`on${device.id -1}`).parentElement.classList.remove('no-animation');
+            }
+            else 
+            {
+                document.getElementById(`on${device.id -1}`).classList.add('status-gray');
+                document.getElementById(`on${device.id -1}`).classList.remove('status-green');
+                document.getElementById(`on${device.id -1}`).parentElement.classList.add('no-animation');
+            }
+        });
+
+    }
+    catch (error) {
+        if (error.name === 'TimeoutError') {
+            alertbox(`<p class="error">'Network error!'</p>`);
+        }
+        else {
+            if (debug == true) {
+                console.log("Unknown error: " + error)
+            }
+            alertbox('Unknown error! Please try again.');
+        }
+    }
+}
 // 
 // Functions
 // 
@@ -274,6 +327,22 @@ function buildDeviceTable(devices) {
                 </div>
             </td>
 
+            <td >
+                <div class="form-field-table">
+                    <label class="switch" for="port${device.id - 1}">
+                    <input type="text" name="port${device.id - 1}" id="port${device.id - 1}" value="${device.port}"
+                            maxlength="5" minlength="0" inputmode="numeric"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value && Number(this.value) > ${tcpPortMax}) {this.value = '${tcpPortMax}';}">
+                    </label>
+                </div>
+            </td>
+
+             <td >
+                <div class="sf-indicator ${device.online ? '' : 'no-animation'}">
+                    <span class="status-dot ${device.online ? 'status-green' : 'status-gray'}" name="on${device.id - 1}" id="on${device.id - 1}"></span>
+                </div>
+            </td>
+
             <td style="text-align:center">
                 <div class="checkbox-wrapper-22">
                     <label class="switch" for="en${device.id - 1}">
@@ -317,7 +386,8 @@ function updateRowEnabled(rowNumber) {
         name: document.getElementById(`name${rowNumber}`),
         mac: document.getElementById(`mac${rowNumber}`),
         ip: document.getElementById(`ip${rowNumber}`),
-        bc: document.getElementById(`bc${rowNumber}`)
+        bc: document.getElementById(`bc${rowNumber}`),
+        port: document.getElementById(`port${rowNumber}`)
     };
 
     Object.values(fields).forEach(field => {
@@ -329,7 +399,12 @@ function updateRowEnabled(rowNumber) {
         [fields.ip, fields.mac, fields.bc].forEach(field =>
             checkInput(field.id) ? null : field.parentElement.classList.add('error')
         );
-    } else {
+    }
+    else {
+        document.getElementById(`on${rowNumber}`).parentElement.classList.add('no-animation');
+        document.getElementById(`on${rowNumber}`).classList.add('status-gray');
+        document.getElementById(`on${rowNumber}`).classList.remove('status-green');
+
         [fields.ip, fields.mac, fields.bc].forEach(field =>
             field.parentElement.classList.remove('error')
         );
@@ -366,7 +441,9 @@ function enableHTTPS() {
 }
 
 // 
-// Event listeners
+// Event listeners and Intervals
 // 
 
 window.addEventListener("load", loadConfig);
+
+const interval = setInterval(function() {refreshStatusIndicator();}, 15000);

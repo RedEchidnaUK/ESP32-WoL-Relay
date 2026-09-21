@@ -35,6 +35,14 @@ bool isValidMACAddress(const String &mac)
     return true;
 }
 
+bool isValidPort(const uint16_t &port)
+{
+    if (port < TCP_PORT_MAX)
+        return true;
+
+    return false;
+}
+
 int checkWifiConfiguration(const String &wifiSSID, const String &wifiPassword)
 {
     int errorCode = 0;
@@ -151,6 +159,18 @@ bool startHTTPSRedirectServer()
     }
 }
 
+bool isAuthorized(PsychicRequest *request)
+{
+    String localApiKey = request->header("X-API-Key");
+
+    if (localApiKey == apiKey)
+    {
+        return true;
+    }
+
+    return basicAuth.isAllowed(request);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // EXTERNAL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +185,7 @@ void prepareServer()
     if (https)
     {
         outputDebugLine("HTTPS server requested");
-        if (serverCertificate.length() > 0 && serverCertificateKey .length() > 0)
+        if (serverCertificate.length() > 0 && serverCertificateKey.length() > 0)
         {
             outputDebugLine("Server certifcates found");
             if (checkCertificateConfiguration(serverCertificate, serverCertificateKey) == 0)
@@ -285,11 +305,12 @@ void startWebApp()
 
                     String row = String(i);
 
-                    String name = doc["devices"][i]["name"];
-                    String mac = doc["devices"][i]["mac"];
-                    String ip = doc["devices"][i]["ip"];
-                    String bc = doc["devices"][i]["bc"];
-                    bool en = doc["devices"][i]["en"];
+                    String name = doc["devices"][i]["name"] | "";
+                    String mac = doc["devices"][i]["mac"] | "";
+                    String ip = doc["devices"][i]["ip"] | "";
+                    String bc = doc["devices"][i]["bc"] | "";
+                    uint16_t port = doc["devices"][i]["port"] | 0;
+                    bool en = doc["devices"][i]["en"] | false;
 
                     outputDebug("name: ");
                     outputDebugLine(name);
@@ -299,6 +320,8 @@ void startWebApp()
                     outputDebugLine(ip);
                     outputDebug("bc: ");
                     outputDebugLine(bc);
+                    outputDebug("port: ");
+                    outputDebugLine(port);
                     outputDebug("en: ");
                     outputDebugLine(en);
 
@@ -324,19 +347,32 @@ void startWebApp()
                             responseStatusCode = 400;
                             errorCode += 4;
                         }
+                        if(!isValidPort(port)){
+                            outputDebugLine("Invalid Port number");
+                            responseStatusCode = 400;
+                            errorCode += 8;
+                        }
                     }
                     else
                     {
                         outputDebug("Setting row: ");
                         outputDebugLine(i);
 
+                        xSemaphoreTake(deviceMutex, portMAX_DELAY);
                         auto &device = devices[i];
 
                         device.name = name;
                         device.mac = mac;
                         device.ip = ip;
                         device.broadcast = bc;
+                        device.port = port;
                         device.enabled = en;
+                        if(!en)
+                            device.online = false;
+
+                        devicesSnapshot[i] = devices[i];
+
+                        xSemaphoreGive(deviceMutex);
                     }
                     outputDebug("Final errorCode: ");
                     outputDebugLine(errorCode);
@@ -462,7 +498,7 @@ void startWebApp()
             serializeJson(doc, body);
             
             return response->send(responseStatusCode, "application/json", body.c_str()); })
-    ->addMiddleware(&basicAuth);
+        ->addMiddleware(&basicAuth);
 
     // GET DEVICE STATUS
 
@@ -495,7 +531,7 @@ void startWebApp()
             return response->send(404, "application/json", json.c_str());
         }
 
-        if (!devices[idx].enabled)
+        if (!devicesSnapshot[idx].enabled)
         {
             doc["error"] = "Device disabled";
             serializeJson(doc, json);
@@ -503,9 +539,9 @@ void startWebApp()
         }
 
         doc["id"] = idx + 1;
-        doc["name"] = devices[idx].name;
-        doc["enabled"] = devices[idx].enabled;
-        doc["online"] = devices[idx].online;
+        doc["name"] = devicesSnapshot[idx].name;
+        doc["enabled"] = devicesSnapshot[idx].enabled;
+        doc["online"] = devicesSnapshot[idx].online;
 
         serializeJson(doc, json);
 
@@ -517,25 +553,25 @@ void startWebApp()
                {
         JsonDocument doc;
         String json;
-        if (!checkApiKeyIsValid(request))
+        if (!isAuthorized(request))
         {
             doc["error"] = "Invalid credentials";
             serializeJson(doc, json);
             return response->send(401, "application/json", json.c_str());
         }
 
-        JsonArray arr = doc.to<JsonArray>();
+        JsonArray deviceArray = doc["devices"].to<JsonArray>();
 
         for (int i = 0; i < DEVICE_COUNT; i++)
         {
-            if (!devices[i].enabled)
+            if (!devicesSnapshot[i].enabled)
                 continue;
 
-            JsonObject o = arr.add<JsonObject>();
+            JsonObject device = deviceArray.add<JsonObject>();
 
-            o["id"] = i + 1;
-            o["name"] = devices[i].name;
-            o["online"] = devices[i].online;
+            device["id"] = i + 1;
+            device["name"] = devicesSnapshot[i].name;
+            device["online"] = devicesSnapshot[i].online;
         }
 
         serializeJson(doc, json);
@@ -553,6 +589,7 @@ void startWebApp()
         doc["wifiPasswordMinLength"] = WIFI_PASSWORD_MIN_LENGTH;
         doc["adminUser"] = adminUser;
         doc["adminPasswordMinLength"] = ADMIN_PASSWORD_MIN_LENGTH;
+        doc["tcpPortMax"] = TCP_PORT_MAX;
         doc["certificate"] = serverCertificate;
         doc["certificateKey"] = serverCertificateKey;
         doc["httpsEnabled"] = https;
@@ -564,12 +601,13 @@ void startWebApp()
             JsonObject device = deviceArray.add<JsonObject>();
 
             device["id"] = i + 1;
-            device["name"] = devices[i].name;
-            device["mac"] = devices[i].mac;
-            device["ip"] = devices[i].ip;
-            device["broadcast"] = devices[i].broadcast;
-            device["enabled"] = devices[i].enabled;
-            device["online"] = devices[i].online;
+            device["name"] = devicesSnapshot[i].name;
+            device["mac"] = devicesSnapshot[i].mac;
+            device["ip"] = devicesSnapshot[i].ip;
+            device["broadcast"] = devicesSnapshot[i].broadcast;
+            device["port"] = devicesSnapshot[i].port;
+            device["online"] = devicesSnapshot[i].online;
+            device["enabled"] = devicesSnapshot[i].enabled;
         }
 
         String json;
@@ -610,7 +648,7 @@ void startWebApp()
 
         }
 
-        if (!devices[idx].enabled)
+        if (!devicesSnapshot[idx].enabled)
         {
             JsonDocument doc;
 
@@ -627,7 +665,7 @@ void startWebApp()
 
             doc["success"] = true;
             doc["id"] = idx + 1;
-            doc["name"] = devices[idx].name;
+            doc["name"] = devicesSnapshot[idx].name;
 
             serializeJson(doc, json);
 
@@ -637,7 +675,7 @@ void startWebApp()
         {
             doc["success"] = "false";
             doc["id"] = idx + 1;
-            doc["name"] = devices[idx].name;
+            doc["name"] = devicesSnapshot[idx].name;
 
             serializeJson(doc, json);
 

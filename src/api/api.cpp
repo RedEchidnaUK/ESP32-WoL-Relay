@@ -6,12 +6,6 @@ bool checkApiKeyIsValid(PsychicRequest *request)
     {
         return request->header("X-API-Key") == apiKey;
     }
-
-    if (request->hasParam("apikey"))
-    {
-        return request->getParam("apikey")->value() == apiKey;
-    }
-
     return false;
 }
 
@@ -35,7 +29,7 @@ int findDevice(String value)
 
     for (int i = 0; i < DEVICE_COUNT; i++)
     {
-        if (devices[i].name.equalsIgnoreCase(value))
+        if (devicesSnapshot[i].name.equalsIgnoreCase(value))
         {
             outputDebugLine("Device name found, id: " + String(i));
             return i;

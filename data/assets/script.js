@@ -17,6 +17,7 @@ const Errors = {
     G: { bit: 64, message: "Invalid Certificate Key" },
     H: { bit: 128, message: "Unknown error!" }
 };
+let tcpPortMax = 0;
 
 // 
 // Functions

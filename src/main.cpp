@@ -3,6 +3,7 @@
 #include "./network/network.h"
 #include "./api/api.h"
 #include "./webserver/webserver.h"
+#include "./tasks/tasks.h"
 
 void rebootCallback(void *arg)
 {
@@ -67,6 +68,7 @@ void setup()
     esp_timer_create(&timerArgs, &rebootTimer);
 
     Serial.begin(115200);
+    deviceMutex = xSemaphoreCreateMutex();
     outputDebugLine("Started");
 
     pinMode(RESET_PIN, INPUT_PULLUP);
@@ -108,6 +110,9 @@ void setup()
 
         fp.close();
 
+        outputDebugLine("Setting HTTPS");
+        https = true;
+
         outputDebugLine("Starting setup portal");
         WiFi.mode(WIFI_AP);
         WiFi.softAP("ESP32 WoL Relay");
@@ -135,7 +140,6 @@ void setup()
             outputDebugLine("Connected to WiFi");
             outputDebugLine(WiFi.localIP());
             prepareServer();
-            updateDeviceStatus();
             startWebApp();
         }
         else
@@ -151,6 +155,7 @@ void setup()
             startSetupPortal();
         }
     }
+    xTaskCreate(portCheckTask, "PortCheck", 4096, nullptr, 1, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,9 +165,4 @@ void setup()
 void loop()
 {
     checkResetButton();
-    if (millis() - lastStatusCheck >= STATUS_CHECK_INTERVAL)
-    {
-        lastStatusCheck = millis();
-        updateDeviceStatus();
-    }
 }
