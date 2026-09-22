@@ -14,7 +14,7 @@
 #define RESET_HOLD_TIME 5000
 #define LED 2
 #define DEVICE_COUNT 10
-#define DEBUG 1
+#define DEBUG 0
 #define TLSLOGS 0
 #define STATUS_CHECK_INTERVAL 30000
 #define MDNSNAME "esp32wolrelay" // Do NOT put .local on the end of this!
